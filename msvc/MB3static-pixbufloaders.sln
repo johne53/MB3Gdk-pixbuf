@@ -1,0 +1,208 @@
+﻿
+Microsoft Visual Studio Solution File, Format Version 9.00
+# Visual Studio 2005
+Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "static-pixbufloader_ani", "static-pixbufloader_ani.vcproj", "{02D9E9B8-CA5C-493B-8D61-7A462746F3E8}"
+	ProjectSection(ProjectDependencies) = postProject
+		{325E567F-2BCE-4380-879E-243BE1D5001A} = {325E567F-2BCE-4380-879E-243BE1D5001A}
+	EndProjectSection
+EndProject
+Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "static-pixbufloader_bmp", "static-pixbufloader_bmp.vcproj", "{325E567F-2BCE-4380-879E-243BE1D5001A}"
+	ProjectSection(ProjectDependencies) = postProject
+		{A9FCB170-0DA3-442A-815A-65E9B3832E0C} = {A9FCB170-0DA3-442A-815A-65E9B3832E0C}
+	EndProjectSection
+EndProject
+Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "static-pixbufloader_gif", "static-pixbufloader_gif.vcproj", "{A9FCB170-0DA3-442A-815A-65E9B3832E0C}"
+	ProjectSection(ProjectDependencies) = postProject
+		{4DE8AD6C-471F-4181-AD3E-B0CF59070276} = {4DE8AD6C-471F-4181-AD3E-B0CF59070276}
+	EndProjectSection
+EndProject
+Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "static-pixbufloader_ico", "static-pixbufloader_ico.vcproj", "{4DE8AD6C-471F-4181-AD3E-B0CF59070276}"
+	ProjectSection(ProjectDependencies) = postProject
+		{A3BD9D0F-7D2C-4B80-9437-469A269FA107} = {A3BD9D0F-7D2C-4B80-9437-469A269FA107}
+	EndProjectSection
+EndProject
+Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "static-pixbufloader_jpeg", "static-pixbufloader_jpeg.vcproj", "{A3BD9D0F-7D2C-4B80-9437-469A269FA107}"
+	ProjectSection(ProjectDependencies) = postProject
+		{35DC19A9-1793-4762-94F5-D36AD8874D0B} = {35DC19A9-1793-4762-94F5-D36AD8874D0B}
+	EndProjectSection
+EndProject
+Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "static-pixbufloader_pcx", "static-pixbufloader_pcx.vcproj", "{35DC19A9-1793-4762-94F5-D36AD8874D0B}"
+	ProjectSection(ProjectDependencies) = postProject
+		{9FE85081-7CEF-4BF9-A0A1-9C3BF91D292E} = {9FE85081-7CEF-4BF9-A0A1-9C3BF91D292E}
+	EndProjectSection
+EndProject
+Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "static-pixbufloader_png", "static-pixbufloader_png.vcproj", "{9FE85081-7CEF-4BF9-A0A1-9C3BF91D292E}"
+	ProjectSection(ProjectDependencies) = postProject
+		{C10B816B-43DC-4217-9703-B9DE2F820BC2} = {C10B816B-43DC-4217-9703-B9DE2F820BC2}
+	EndProjectSection
+EndProject
+Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "static-pixbufloader_pnm", "static-pixbufloader_pnm.vcproj", "{C10B816B-43DC-4217-9703-B9DE2F820BC2}"
+	ProjectSection(ProjectDependencies) = postProject
+		{47B00888-AA14-491E-80E7-483C10CCF756} = {47B00888-AA14-491E-80E7-483C10CCF756}
+	EndProjectSection
+EndProject
+Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "static-pixbufloader_ras", "static-pixbufloader_ras.vcproj", "{47B00888-AA14-491E-80E7-483C10CCF756}"
+	ProjectSection(ProjectDependencies) = postProject
+		{BBD990AF-B914-453C-B866-237068F0C32E} = {BBD990AF-B914-453C-B866-237068F0C32E}
+	EndProjectSection
+EndProject
+Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "static-pixbufloader_tga", "static-pixbufloader_tga.vcproj", "{BBD990AF-B914-453C-B866-237068F0C32E}"
+	ProjectSection(ProjectDependencies) = postProject
+		{14C993F5-06E6-4248-BE11-ECF40D5B3FDB} = {14C993F5-06E6-4248-BE11-ECF40D5B3FDB}
+	EndProjectSection
+EndProject
+Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "static-pixbufloader_pixdata", "static-pixbufloader_pixdata.vcproj", "{B3A63CE3-824A-49FC-9D6D-2A6E417A053A}"
+EndProject
+Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "static-pixbufloader_tiff", "static-pixbufloader_tiff.vcproj", "{14C993F5-06E6-4248-BE11-ECF40D5B3FDB}"
+	ProjectSection(ProjectDependencies) = postProject
+		{6842458C-FF68-4675-AFC0-C60724C90BBB} = {6842458C-FF68-4675-AFC0-C60724C90BBB}
+	EndProjectSection
+EndProject
+Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "static-pixbufloader_wbmp", "static-pixbufloader_wbmp.vcproj", "{6842458C-FF68-4675-AFC0-C60724C90BBB}"
+	ProjectSection(ProjectDependencies) = postProject
+		{509CC714-E446-400C-A0C0-27BD3B0D8BC1} = {509CC714-E446-400C-A0C0-27BD3B0D8BC1}
+	EndProjectSection
+EndProject
+Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "static-pixbufloader_xbm", "static-pixbufloader_xbm.vcproj", "{509CC714-E446-400C-A0C0-27BD3B0D8BC1}"
+	ProjectSection(ProjectDependencies) = postProject
+		{3EA2436A-DA9E-4D46-A581-5EDEF890FE93} = {3EA2436A-DA9E-4D46-A581-5EDEF890FE93}
+	EndProjectSection
+EndProject
+Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "static-pixbufloader_xpm", "static-pixbufloader_xpm.vcproj", "{3EA2436A-DA9E-4D46-A581-5EDEF890FE93}"
+	ProjectSection(ProjectDependencies) = postProject
+		{B3A63CE3-824A-49FC-9D6D-2A6E417A053A} = {B3A63CE3-824A-49FC-9D6D-2A6E417A053A}
+	EndProjectSection
+EndProject
+Global
+	GlobalSection(SolutionConfigurationPlatforms) = preSolution
+		Debug 32 with Secure SCL|Win32 = Debug 32 with Secure SCL|Win32
+		Debug 32|Win32 = Debug 32|Win32
+		Release 32 with Debugging Capability|Win32 = Release 32 with Debugging Capability|Win32
+		Release 32|Win32 = Release 32|Win32
+	EndGlobalSection
+	GlobalSection(ProjectConfigurationPlatforms) = postSolution
+		{02D9E9B8-CA5C-493B-8D61-7A462746F3E8}.Debug 32 with Secure SCL|Win32.ActiveCfg = Debug 32 with Secure SCL|Win32
+		{02D9E9B8-CA5C-493B-8D61-7A462746F3E8}.Debug 32 with Secure SCL|Win32.Build.0 = Debug 32 with Secure SCL|Win32
+		{02D9E9B8-CA5C-493B-8D61-7A462746F3E8}.Debug 32|Win32.ActiveCfg = Debug 32|Win32
+		{02D9E9B8-CA5C-493B-8D61-7A462746F3E8}.Debug 32|Win32.Build.0 = Debug 32|Win32
+		{02D9E9B8-CA5C-493B-8D61-7A462746F3E8}.Release 32 with Debugging Capability|Win32.ActiveCfg = Release 32 with Debugging Capability|Win32
+		{02D9E9B8-CA5C-493B-8D61-7A462746F3E8}.Release 32 with Debugging Capability|Win32.Build.0 = Release 32 with Debugging Capability|Win32
+		{02D9E9B8-CA5C-493B-8D61-7A462746F3E8}.Release 32|Win32.ActiveCfg = Release 32|Win32
+		{02D9E9B8-CA5C-493B-8D61-7A462746F3E8}.Release 32|Win32.Build.0 = Release 32|Win32
+		{325E567F-2BCE-4380-879E-243BE1D5001A}.Debug 32 with Secure SCL|Win32.ActiveCfg = Debug 32 with Secure SCL|Win32
+		{325E567F-2BCE-4380-879E-243BE1D5001A}.Debug 32 with Secure SCL|Win32.Build.0 = Debug 32 with Secure SCL|Win32
+		{325E567F-2BCE-4380-879E-243BE1D5001A}.Debug 32|Win32.ActiveCfg = Debug 32|Win32
+		{325E567F-2BCE-4380-879E-243BE1D5001A}.Debug 32|Win32.Build.0 = Debug 32|Win32
+		{325E567F-2BCE-4380-879E-243BE1D5001A}.Release 32 with Debugging Capability|Win32.ActiveCfg = Release 32 with Debugging Capability|Win32
+		{325E567F-2BCE-4380-879E-243BE1D5001A}.Release 32 with Debugging Capability|Win32.Build.0 = Release 32 with Debugging Capability|Win32
+		{325E567F-2BCE-4380-879E-243BE1D5001A}.Release 32|Win32.ActiveCfg = Release 32|Win32
+		{325E567F-2BCE-4380-879E-243BE1D5001A}.Release 32|Win32.Build.0 = Release 32|Win32
+		{A9FCB170-0DA3-442A-815A-65E9B3832E0C}.Debug 32 with Secure SCL|Win32.ActiveCfg = Debug 32 with Secure SCL|Win32
+		{A9FCB170-0DA3-442A-815A-65E9B3832E0C}.Debug 32 with Secure SCL|Win32.Build.0 = Debug 32 with Secure SCL|Win32
+		{A9FCB170-0DA3-442A-815A-65E9B3832E0C}.Debug 32|Win32.ActiveCfg = Debug 32|Win32
+		{A9FCB170-0DA3-442A-815A-65E9B3832E0C}.Debug 32|Win32.Build.0 = Debug 32|Win32
+		{A9FCB170-0DA3-442A-815A-65E9B3832E0C}.Release 32 with Debugging Capability|Win32.ActiveCfg = Release 32 with Debugging Capability|Win32
+		{A9FCB170-0DA3-442A-815A-65E9B3832E0C}.Release 32 with Debugging Capability|Win32.Build.0 = Release 32 with Debugging Capability|Win32
+		{A9FCB170-0DA3-442A-815A-65E9B3832E0C}.Release 32|Win32.ActiveCfg = Release 32|Win32
+		{A9FCB170-0DA3-442A-815A-65E9B3832E0C}.Release 32|Win32.Build.0 = Release 32|Win32
+		{4DE8AD6C-471F-4181-AD3E-B0CF59070276}.Debug 32 with Secure SCL|Win32.ActiveCfg = Debug 32 with Secure SCL|Win32
+		{4DE8AD6C-471F-4181-AD3E-B0CF59070276}.Debug 32 with Secure SCL|Win32.Build.0 = Debug 32 with Secure SCL|Win32
+		{4DE8AD6C-471F-4181-AD3E-B0CF59070276}.Debug 32|Win32.ActiveCfg = Debug 32|Win32
+		{4DE8AD6C-471F-4181-AD3E-B0CF59070276}.Debug 32|Win32.Build.0 = Debug 32|Win32
+		{4DE8AD6C-471F-4181-AD3E-B0CF59070276}.Release 32 with Debugging Capability|Win32.ActiveCfg = Release 32 with Debugging Capability|Win32
+		{4DE8AD6C-471F-4181-AD3E-B0CF59070276}.Release 32 with Debugging Capability|Win32.Build.0 = Release 32 with Debugging Capability|Win32
+		{4DE8AD6C-471F-4181-AD3E-B0CF59070276}.Release 32|Win32.ActiveCfg = Release 32|Win32
+		{4DE8AD6C-471F-4181-AD3E-B0CF59070276}.Release 32|Win32.Build.0 = Release 32|Win32
+		{A3BD9D0F-7D2C-4B80-9437-469A269FA107}.Debug 32 with Secure SCL|Win32.ActiveCfg = Debug 32 with Secure SCL|Win32
+		{A3BD9D0F-7D2C-4B80-9437-469A269FA107}.Debug 32 with Secure SCL|Win32.Build.0 = Debug 32 with Secure SCL|Win32
+		{A3BD9D0F-7D2C-4B80-9437-469A269FA107}.Debug 32|Win32.ActiveCfg = Debug 32|Win32
+		{A3BD9D0F-7D2C-4B80-9437-469A269FA107}.Debug 32|Win32.Build.0 = Debug 32|Win32
+		{A3BD9D0F-7D2C-4B80-9437-469A269FA107}.Release 32 with Debugging Capability|Win32.ActiveCfg = Release 32 with Debugging Capability|Win32
+		{A3BD9D0F-7D2C-4B80-9437-469A269FA107}.Release 32 with Debugging Capability|Win32.Build.0 = Release 32 with Debugging Capability|Win32
+		{A3BD9D0F-7D2C-4B80-9437-469A269FA107}.Release 32|Win32.ActiveCfg = Release 32|Win32
+		{A3BD9D0F-7D2C-4B80-9437-469A269FA107}.Release 32|Win32.Build.0 = Release 32|Win32
+		{35DC19A9-1793-4762-94F5-D36AD8874D0B}.Debug 32 with Secure SCL|Win32.ActiveCfg = Debug 32 with Secure SCL|Win32
+		{35DC19A9-1793-4762-94F5-D36AD8874D0B}.Debug 32 with Secure SCL|Win32.Build.0 = Debug 32 with Secure SCL|Win32
+		{35DC19A9-1793-4762-94F5-D36AD8874D0B}.Debug 32|Win32.ActiveCfg = Debug 32|Win32
+		{35DC19A9-1793-4762-94F5-D36AD8874D0B}.Debug 32|Win32.Build.0 = Debug 32|Win32
+		{35DC19A9-1793-4762-94F5-D36AD8874D0B}.Release 32 with Debugging Capability|Win32.ActiveCfg = Release 32 with Debugging Capability|Win32
+		{35DC19A9-1793-4762-94F5-D36AD8874D0B}.Release 32 with Debugging Capability|Win32.Build.0 = Release 32 with Debugging Capability|Win32
+		{35DC19A9-1793-4762-94F5-D36AD8874D0B}.Release 32|Win32.ActiveCfg = Release 32|Win32
+		{35DC19A9-1793-4762-94F5-D36AD8874D0B}.Release 32|Win32.Build.0 = Release 32|Win32
+		{9FE85081-7CEF-4BF9-A0A1-9C3BF91D292E}.Debug 32 with Secure SCL|Win32.ActiveCfg = Debug 32 with Secure SCL|Win32
+		{9FE85081-7CEF-4BF9-A0A1-9C3BF91D292E}.Debug 32 with Secure SCL|Win32.Build.0 = Debug 32 with Secure SCL|Win32
+		{9FE85081-7CEF-4BF9-A0A1-9C3BF91D292E}.Debug 32|Win32.ActiveCfg = Debug 32|Win32
+		{9FE85081-7CEF-4BF9-A0A1-9C3BF91D292E}.Debug 32|Win32.Build.0 = Debug 32|Win32
+		{9FE85081-7CEF-4BF9-A0A1-9C3BF91D292E}.Release 32 with Debugging Capability|Win32.ActiveCfg = Release 32 with Debugging Capability|Win32
+		{9FE85081-7CEF-4BF9-A0A1-9C3BF91D292E}.Release 32 with Debugging Capability|Win32.Build.0 = Release 32 with Debugging Capability|Win32
+		{9FE85081-7CEF-4BF9-A0A1-9C3BF91D292E}.Release 32|Win32.ActiveCfg = Release 32|Win32
+		{9FE85081-7CEF-4BF9-A0A1-9C3BF91D292E}.Release 32|Win32.Build.0 = Release 32|Win32
+		{C10B816B-43DC-4217-9703-B9DE2F820BC2}.Debug 32 with Secure SCL|Win32.ActiveCfg = Debug 32 with Secure SCL|Win32
+		{C10B816B-43DC-4217-9703-B9DE2F820BC2}.Debug 32 with Secure SCL|Win32.Build.0 = Debug 32 with Secure SCL|Win32
+		{C10B816B-43DC-4217-9703-B9DE2F820BC2}.Debug 32|Win32.ActiveCfg = Debug 32|Win32
+		{C10B816B-43DC-4217-9703-B9DE2F820BC2}.Debug 32|Win32.Build.0 = Debug 32|Win32
+		{C10B816B-43DC-4217-9703-B9DE2F820BC2}.Release 32 with Debugging Capability|Win32.ActiveCfg = Release 32 with Debugging Capability|Win32
+		{C10B816B-43DC-4217-9703-B9DE2F820BC2}.Release 32 with Debugging Capability|Win32.Build.0 = Release 32 with Debugging Capability|Win32
+		{C10B816B-43DC-4217-9703-B9DE2F820BC2}.Release 32|Win32.ActiveCfg = Release 32|Win32
+		{C10B816B-43DC-4217-9703-B9DE2F820BC2}.Release 32|Win32.Build.0 = Release 32|Win32
+		{47B00888-AA14-491E-80E7-483C10CCF756}.Debug 32 with Secure SCL|Win32.ActiveCfg = Debug 32 with Secure SCL|Win32
+		{47B00888-AA14-491E-80E7-483C10CCF756}.Debug 32 with Secure SCL|Win32.Build.0 = Debug 32 with Secure SCL|Win32
+		{47B00888-AA14-491E-80E7-483C10CCF756}.Debug 32|Win32.ActiveCfg = Debug 32|Win32
+		{47B00888-AA14-491E-80E7-483C10CCF756}.Debug 32|Win32.Build.0 = Debug 32|Win32
+		{47B00888-AA14-491E-80E7-483C10CCF756}.Release 32 with Debugging Capability|Win32.ActiveCfg = Release 32 with Debugging Capability|Win32
+		{47B00888-AA14-491E-80E7-483C10CCF756}.Release 32 with Debugging Capability|Win32.Build.0 = Release 32 with Debugging Capability|Win32
+		{47B00888-AA14-491E-80E7-483C10CCF756}.Release 32|Win32.ActiveCfg = Release 32|Win32
+		{47B00888-AA14-491E-80E7-483C10CCF756}.Release 32|Win32.Build.0 = Release 32|Win32
+		{BBD990AF-B914-453C-B866-237068F0C32E}.Debug 32 with Secure SCL|Win32.ActiveCfg = Debug 32 with Secure SCL|Win32
+		{BBD990AF-B914-453C-B866-237068F0C32E}.Debug 32 with Secure SCL|Win32.Build.0 = Debug 32 with Secure SCL|Win32
+		{BBD990AF-B914-453C-B866-237068F0C32E}.Debug 32|Win32.ActiveCfg = Debug 32|Win32
+		{BBD990AF-B914-453C-B866-237068F0C32E}.Debug 32|Win32.Build.0 = Debug 32|Win32
+		{BBD990AF-B914-453C-B866-237068F0C32E}.Release 32 with Debugging Capability|Win32.ActiveCfg = Release 32 with Debugging Capability|Win32
+		{BBD990AF-B914-453C-B866-237068F0C32E}.Release 32 with Debugging Capability|Win32.Build.0 = Release 32 with Debugging Capability|Win32
+		{BBD990AF-B914-453C-B866-237068F0C32E}.Release 32|Win32.ActiveCfg = Release 32|Win32
+		{BBD990AF-B914-453C-B866-237068F0C32E}.Release 32|Win32.Build.0 = Release 32|Win32
+		{B3A63CE3-824A-49FC-9D6D-2A6E417A053A}.Debug 32 with Secure SCL|Win32.ActiveCfg = Debug 32 with Secure SCL|Win32
+		{B3A63CE3-824A-49FC-9D6D-2A6E417A053A}.Debug 32 with Secure SCL|Win32.Build.0 = Debug 32 with Secure SCL|Win32
+		{B3A63CE3-824A-49FC-9D6D-2A6E417A053A}.Debug 32|Win32.ActiveCfg = Debug 32|Win32
+		{B3A63CE3-824A-49FC-9D6D-2A6E417A053A}.Debug 32|Win32.Build.0 = Debug 32|Win32
+		{B3A63CE3-824A-49FC-9D6D-2A6E417A053A}.Release 32 with Debugging Capability|Win32.ActiveCfg = Release 32 with Debugging Capability|Win32
+		{B3A63CE3-824A-49FC-9D6D-2A6E417A053A}.Release 32 with Debugging Capability|Win32.Build.0 = Release 32 with Debugging Capability|Win32
+		{B3A63CE3-824A-49FC-9D6D-2A6E417A053A}.Release 32|Win32.ActiveCfg = Release 32|Win32
+		{B3A63CE3-824A-49FC-9D6D-2A6E417A053A}.Release 32|Win32.Build.0 = Release 32|Win32
+		{14C993F5-06E6-4248-BE11-ECF40D5B3FDB}.Debug 32 with Secure SCL|Win32.ActiveCfg = Debug 32 with Secure SCL|Win32
+		{14C993F5-06E6-4248-BE11-ECF40D5B3FDB}.Debug 32 with Secure SCL|Win32.Build.0 = Debug 32 with Secure SCL|Win32
+		{14C993F5-06E6-4248-BE11-ECF40D5B3FDB}.Debug 32|Win32.ActiveCfg = Debug 32|Win32
+		{14C993F5-06E6-4248-BE11-ECF40D5B3FDB}.Debug 32|Win32.Build.0 = Debug 32|Win32
+		{14C993F5-06E6-4248-BE11-ECF40D5B3FDB}.Release 32 with Debugging Capability|Win32.ActiveCfg = Release 32 with Debugging Capability|Win32
+		{14C993F5-06E6-4248-BE11-ECF40D5B3FDB}.Release 32 with Debugging Capability|Win32.Build.0 = Release 32 with Debugging Capability|Win32
+		{14C993F5-06E6-4248-BE11-ECF40D5B3FDB}.Release 32|Win32.ActiveCfg = Release 32|Win32
+		{14C993F5-06E6-4248-BE11-ECF40D5B3FDB}.Release 32|Win32.Build.0 = Release 32|Win32
+		{6842458C-FF68-4675-AFC0-C60724C90BBB}.Debug 32 with Secure SCL|Win32.ActiveCfg = Debug 32 with Secure SCL|Win32
+		{6842458C-FF68-4675-AFC0-C60724C90BBB}.Debug 32 with Secure SCL|Win32.Build.0 = Debug 32 with Secure SCL|Win32
+		{6842458C-FF68-4675-AFC0-C60724C90BBB}.Debug 32|Win32.ActiveCfg = Debug 32|Win32
+		{6842458C-FF68-4675-AFC0-C60724C90BBB}.Debug 32|Win32.Build.0 = Debug 32|Win32
+		{6842458C-FF68-4675-AFC0-C60724C90BBB}.Release 32 with Debugging Capability|Win32.ActiveCfg = Release 32 with Debugging Capability|Win32
+		{6842458C-FF68-4675-AFC0-C60724C90BBB}.Release 32 with Debugging Capability|Win32.Build.0 = Release 32 with Debugging Capability|Win32
+		{6842458C-FF68-4675-AFC0-C60724C90BBB}.Release 32|Win32.ActiveCfg = Release 32|Win32
+		{6842458C-FF68-4675-AFC0-C60724C90BBB}.Release 32|Win32.Build.0 = Release 32|Win32
+		{509CC714-E446-400C-A0C0-27BD3B0D8BC1}.Debug 32 with Secure SCL|Win32.ActiveCfg = Debug 32 with Secure SCL|Win32
+		{509CC714-E446-400C-A0C0-27BD3B0D8BC1}.Debug 32 with Secure SCL|Win32.Build.0 = Debug 32 with Secure SCL|Win32
+		{509CC714-E446-400C-A0C0-27BD3B0D8BC1}.Debug 32|Win32.ActiveCfg = Debug 32|Win32
+		{509CC714-E446-400C-A0C0-27BD3B0D8BC1}.Debug 32|Win32.Build.0 = Debug 32|Win32
+		{509CC714-E446-400C-A0C0-27BD3B0D8BC1}.Release 32 with Debugging Capability|Win32.ActiveCfg = Release 32 with Debugging Capability|Win32
+		{509CC714-E446-400C-A0C0-27BD3B0D8BC1}.Release 32 with Debugging Capability|Win32.Build.0 = Release 32 with Debugging Capability|Win32
+		{509CC714-E446-400C-A0C0-27BD3B0D8BC1}.Release 32|Win32.ActiveCfg = Release 32|Win32
+		{509CC714-E446-400C-A0C0-27BD3B0D8BC1}.Release 32|Win32.Build.0 = Release 32|Win32
+		{3EA2436A-DA9E-4D46-A581-5EDEF890FE93}.Debug 32 with Secure SCL|Win32.ActiveCfg = Debug 32 with Secure SCL|Win32
+		{3EA2436A-DA9E-4D46-A581-5EDEF890FE93}.Debug 32 with Secure SCL|Win32.Build.0 = Debug 32 with Secure SCL|Win32
+		{3EA2436A-DA9E-4D46-A581-5EDEF890FE93}.Debug 32|Win32.ActiveCfg = Debug 32|Win32
+		{3EA2436A-DA9E-4D46-A581-5EDEF890FE93}.Debug 32|Win32.Build.0 = Debug 32|Win32
+		{3EA2436A-DA9E-4D46-A581-5EDEF890FE93}.Release 32 with Debugging Capability|Win32.ActiveCfg = Release 32 with Debugging Capability|Win32
+		{3EA2436A-DA9E-4D46-A581-5EDEF890FE93}.Release 32 with Debugging Capability|Win32.Build.0 = Release 32 with Debugging Capability|Win32
+		{3EA2436A-DA9E-4D46-A581-5EDEF890FE93}.Release 32|Win32.ActiveCfg = Release 32|Win32
+		{3EA2436A-DA9E-4D46-A581-5EDEF890FE93}.Release 32|Win32.Build.0 = Release 32|Win32
+	EndGlobalSection
+	GlobalSection(SolutionProperties) = preSolution
+		HideSolutionNode = FALSE
+	EndGlobalSection
+EndGlobal

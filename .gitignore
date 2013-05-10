@@ -161,3 +161,11 @@ pip-log.txt
 
 # Mac crap
 .DS_Store
+
+/config.h.win32
+/config.h
+/gdk-pixbuf/gdk_pixbuf.rc
+/gdk-pixbuf/gdk-pixbuf-enum-types.c
+/gdk-pixbuf/gdk-pixbuf-enum-types.h
+/gdk-pixbuf/gdk-pixbuf-features.h
+/msvc/gdk-pixbuf.vsprops

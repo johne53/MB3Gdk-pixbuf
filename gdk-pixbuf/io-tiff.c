@@ -296,7 +296,7 @@ gdk_pixbuf__tiff_image_load (FILE *f, GError **error)
 
         pixbuf = tiff_image_parse (tiff, NULL, error);
 
-        TIFFClose (tiff);
+        TIFFCleanup(tiff); /* Changed by JE - 01-12-2010. Was formerly... TIFFClose (tiff); */
 
         return pixbuf;
 }
