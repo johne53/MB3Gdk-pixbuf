@@ -3,7 +3,7 @@
 	ProjectType="Visual C++"
 	Version="8.00"
 	Name="static-pixbufloader_ani"
-	ProjectGUID="{02D9E9B8-CA5C-493b-8D61-7A462746F3E8}"
+	ProjectGUID="{02D9E9B8-CA5C-493B-8D61-7A462746F3E8}"
 	RootNamespace="static-pixbufloader_ani"
 	>
 	<Platforms>
