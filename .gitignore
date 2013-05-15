@@ -169,3 +169,4 @@ pip-log.txt
 /gdk-pixbuf/gdk-pixbuf-enum-types.h
 /gdk-pixbuf/gdk-pixbuf-features.h
 /msvc/gdk-pixbuf.vsprops
+/msvc/gdk-pixbuf.def

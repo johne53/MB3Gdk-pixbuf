@@ -18,7 +18,7 @@
 	/>
 	<UserMacro
 		Name="DllSuffix"
-		Value="-@GDK_PIXBUF_API_VERSION@"
+		Value="-@GDK_PIXBUF_API_VERSION@-@LT_CURRENT_MINUS_AGE@"
 	/>
 	<UserMacro
 		Name="GlibDllSuffix"
