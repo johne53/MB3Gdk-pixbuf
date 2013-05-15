@@ -21,8 +21,28 @@
 		Value="-@GDK_PIXBUF_API_VERSION@"
 	/>
 	<UserMacro
+		Name="GlibDllSuffix"
+		Value="-2.0-0"
+	/>
+	<UserMacro
+		Name="PangoDllSuffix"
+		Value="-1.0-0"
+	/>
+	<UserMacro
+		Name="CairoDllSuffix"
+		Value="-2"
+	/>
+	<UserMacro
+		Name="GdkPixbufDllSuffix"
+		Value="-2.0"
+	/>
+	<UserMacro
 		Name="GlibBuildRootFolder"
 		Value="@GlibBuildRootFolder@"
+	/>
+	<UserMacro
+		Name="GdkPixbufBuildRootFolder"
+		Value="@GdkPixbufBuildRootFolder@"
 	/>
 	<UserMacro
 		Name="GtkBuildProjectFolder"

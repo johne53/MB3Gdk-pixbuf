@@ -34,6 +34,7 @@ sub process_file
 	    s/\@GETTEXT_PACKAGE\@/$gettext_package/g;
 	    s/\@PERL_PATH@/$perl_path/g;
 	    s/\@GlibBuildRootFolder@/$glib_build_root_folder/g;
+	    s/\@GdkPixbufBuildRootFolder@/$gdk_pixbuf_build_root_folder/g;
 	    s/\@GtkBuildProjectFolder@/$gtk_build_project_folder/g;
 	    s/\@GenericIncludeFolder@/$generic_include_folder/g;
 	    s/\@GenericLibraryFolder@/$generic_library_folder/g;
