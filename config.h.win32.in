@@ -121,6 +121,9 @@
 /* Define to the version of this package. */
 #define PACKAGE_VERSION "@GDK_PIXBUF_MAJOR@.@GDK_PIXBUF_MINOR@.@GDK_PIXBUF_MICRO@"
 
+/* This one added by JE - 14-05-2013 */
+#define GDK_PIXBUF_BINARY_VERSION @GDK_PIXBUF_BINARY_VERSION@
+
 /* Define to 1 if you have the ANSI C header files. */
 #define STDC_HEADERS 1
 
