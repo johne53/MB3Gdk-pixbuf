@@ -5,8 +5,20 @@
 	Name="gdk-pixbuf"
 	>
 	<UserMacro
+		Name="GlibApiVersion"
+		Value="@GDK_PIXBUF_API_VERSION@"
+	/>
+	<UserMacro
 		Name="GtkApiVersion"
 		Value="@GDK_PIXBUF_API_VERSION@"
+	/>
+	<UserMacro
+		Name="AtkApiVersion"
+		Value="@ATK_API_VERSION@"
+	/>
+	<UserMacro
+		Name="PangoApiVersion"
+		Value="@PANGO_API_VERSION@"
 	/>
 	<UserMacro
 		Name="GdkPixbufApiVersion"
@@ -79,6 +91,14 @@
 	<UserMacro
 		Name="Release32TargetFolder"
 		Value="@Release32TargetFolder@"
+	/>
+	<UserMacro
+		Name="Debug32PixbufLoadersFolder"
+		Value="@Debug32PixbufLoadersFolder@"
+	/>
+	<UserMacro
+		Name="Release32PixbufLoadersFolder"
+		Value="@Release32PixbufLoadersFolder@"
 	/>
 	<UserMacro
 		Name="TargetSxSFolder"

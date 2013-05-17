@@ -3,7 +3,6 @@
 
 require "../local-paths.lib";
 
-$gdk_pixbuf_api_version = "2.0";
 $gdk_pixbuf_version = "2.28.1";
 $major = 2;
 $minor = 28;
@@ -12,6 +11,9 @@ $interface_age = 1;
 $binary_age = 281;
 $current_minus_age = 0;
 $gettext_package = "gdk-pixbuf20";
+$atk_api_version = "1.0";
+$pango_api_version = "1.0";
+$gdk_pixbuf_api_version = "2.0";
 
 sub process_file
 {
@@ -23,6 +25,8 @@ sub process_file
 	
 	while (<INPUT>) {
 	    s/\@GDK_PIXBUF_API_VERSION@/$gdk_pixbuf_api_version/g;
+	    s/\@ATK_API_VERSION@/$atk_api_version/g;
+	    s/\@PANGO_API_VERSION@/$pango_api_version/g;
 	    s/\@GDK_PIXBUF_VERSION@/$gdk_pixbuf_version/g;
 	    s/\@GDK_PIXBUF_MAJOR\@/$major/g;
 	    s/\@GDK_PIXBUF_MINOR\@/$minor/g;
@@ -44,6 +48,8 @@ sub process_file
 	    s/\@Release32TestSuiteFolder@/$release32_testsuite_folder/g;
 	    s/\@Debug32TargetFolder@/$debug32_target_folder/g;
 	    s/\@Release32TargetFolder@/$release32_target_folder/g;
+	    s/\@Debug32PixbufLoadersFolder@/$debug32_pixbuf_loaders_folder/g;
+	    s/\@Release32PixbufLoadersFolder@/$release32_pixbuf_loaders_folder/g;
 	    s/\@TargetSxSFolder@/$target_sxs_folder/g;
 	    print OUTPUT;
 	}
