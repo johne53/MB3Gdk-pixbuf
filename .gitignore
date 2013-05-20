@@ -170,3 +170,6 @@ pip-log.txt
 /gdk-pixbuf/gdk-pixbuf-features.h
 /msvc/gdk-pixbuf.vsprops
 /msvc/gdk-pixbuf.def
+/gdk-pixbuf/config.h
+/gdk-pixbuf/gdk-pixbuf-marshal.c
+/gdk-pixbuf/gdk-pixbuf-marshal.h
