@@ -46,7 +46,7 @@
 	/>
 	<UserMacro
 		Name="GdkPixbufDllSuffix"
-		Value="-2.0"
+		Value="-@GDK_PIXBUF_API_VERSION@-@LT_CURRENT_MINUS_AGE@"
 	/>
 	<UserMacro
 		Name="GlibBuildRootFolder"
