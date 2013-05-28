@@ -11,9 +11,10 @@ $interface_age = 1;
 $binary_age = 281;
 $current_minus_age = 0;
 $gettext_package = "gdk-pixbuf20";
-$atk_api_version = "1.0";
+$atk_api_version = "2.0";
 $pango_api_version = "1.0";
 $gdk_pixbuf_api_version = "2.0";
+$gdk_pixbuf_loaders_version = "v2.28"; # Used to locate the file, 'loaders.cache'. Change this only when absolutely necessary !
 
 sub process_file
 {
@@ -31,7 +32,7 @@ sub process_file
 	    s/\@GDK_PIXBUF_MAJOR\@/$major/g;
 	    s/\@GDK_PIXBUF_MINOR\@/$minor/g;
 	    s/\@GDK_PIXBUF_MICRO\@/$micro/g;
-	    s/\@GDK_PIXBUF_BINARY_VERSION\@/$binary_age/g;
+	    s/\@GDK_PIXBUF_BINARY_VERSION\@/$gdk_pixbuf_loaders_version/g; # See the comment, above
 	    s/\@GDK_PIXBUF_BINARY_AGE\@/$binary_age/g;
 	    s/\@GDK_PIXBUF_INTERFACE_AGE\@/$interface_age/g;
 	    s/\@LT_CURRENT_MINUS_AGE@/$current_minus_age/g;
