@@ -14,9 +14,9 @@ AC_PREREQ([2.63])
 #   gdk_pixbuf_binary_age = 0;
 
 m4_define([gdk_pixbuf_major_version], [2])
-m4_define([gdk_pixbuf_minor_version], [28])
+m4_define([gdk_pixbuf_minor_version], [29])
 m4_define([gdk_pixbuf_micro_version], [1])
-m4_define([gdk_pixbuf_interface_age], [1])
+m4_define([gdk_pixbuf_interface_age], [0])
 m4_define([gdk_pixbuf_binary_age],
           [m4_eval(100 * gdk_pixbuf_minor_version + gdk_pixbuf_micro_version)])
 m4_define([gdk_pixbuf_version],
@@ -26,7 +26,7 @@ m4_define([gdk_pixbuf_binary_version], [2.10.0])
 
 
 # required versions of other packages
-m4_define([glib_required_version], [2.34.0])
+m4_define([glib_required_version], [2.37.0])
 
 AC_INIT([gdk-pixbuf], [gdk_pixbuf_version],
         [http://bugzilla.gnome.org/enter_bug.cgi?product=gdk-pixbuf],
@@ -586,7 +586,7 @@ fi
 
 dnl Test for libpng
   if test x$with_libpng != xno && test -z "$LIBPNG"; then
-    for l in libpng15 libpng14 libpng12 libpng13 libpng10 libpng ; do
+    for l in libpng16 libpng15 libpng14 libpng12 libpng13 libpng10; do
       AC_MSG_CHECKING(for $l)
       if $PKG_CONFIG --exists $l ; then
         AC_MSG_RESULT(yes)
@@ -1024,6 +1024,13 @@ if test "x${enable_Bsymbolic}" = "xyes"; then
 fi
 
 AC_SUBST(GDK_PIXBUF_LINK_FLAGS)
+
+
+AC_ARG_ENABLE(installed_tests,
+              AS_HELP_STRING([--enable-installed-tests],
+                             [Install test programs (default: no)]),,
+              [enable_installed_tests=no])
+AM_CONDITIONAL(BUILDOPT_INSTALL_TESTS, test x$enable_installed_tests = xyes)
 
 
 ##################################################
