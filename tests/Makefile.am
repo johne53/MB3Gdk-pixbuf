@@ -18,6 +18,7 @@ LDADDS = \
 	$(GDK_PIXBUF_DEP_LIBS)
 
 noinst_PROGRAMS = \
+	animation			\
 	pixbuf-read			\
 	pixbuf-lowmem			\
 	pixbuf-randomly-modified	\
@@ -25,6 +26,7 @@ noinst_PROGRAMS = \
 	pixbuf-threads			\
 	pixbuf-icon-serialize
 
+animation_LDADD = $(LDADDS)
 pixbuf_read_LDADD = $(LDADDS)
 pixbuf_lowmem_LDADD = $(LDADDS)
 pixbuf_randomly_modified_LDADD = $(LDADDS)
@@ -35,13 +37,20 @@ pixbuf_icon_serialize_LDADD = $(LDADDS) $(GLIB_LIBS)
 if BUILDOPT_INSTALL_TESTS
 insttestdir = $(pkglibexecdir)/installed-tests
 insttest_PROGRAMS = 			\
+	animation			\
 	pixbuf-icon-serialize 		\
 	pixbuf-randomly-modified	\
 	pixbuf-threads			\
 	$(NULL)
 
+insttest_DATA = 			\
+	test-image.png			\
+	test-animation.gif		\
+	test-animation.ani		\
+	$(NULL)
+
 testimagedir = $(insttestdir)/test-images
-testimage_DATA = $(wildcard test-images/*)
+testimage_DATA = $(wildcard $(srcdir)/test-images/*)
 
 substitutions = \
 	-e s,@pkglibexecdir\@,$(pkglibexecdir),g \
