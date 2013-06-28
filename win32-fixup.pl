@@ -3,12 +3,12 @@
 
 require "../local-paths.lib";
 
-$gdk_pixbuf_version = "2.29.1";
+$gdk_pixbuf_version = "2.29.2";
 $major = 2;
 $minor = 29;
-$micro = 1;
+$micro = 2;
 $interface_age = 0;
-$binary_age = 291;
+$binary_age = 2902;
 $current_minus_age = 0;
 $gettext_package = "gdk-pixbuf20";
 $atk_api_version = "2.0";
