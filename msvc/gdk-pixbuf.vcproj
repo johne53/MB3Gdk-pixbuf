@@ -74,7 +74,7 @@
 			<Tool
 				Name="VCLinkerTool"
 				AdditionalDependencies="intlD.lib zlib1D.lib $(DllPrefix)png12D.lib $(DllPrefix)gobject32$(GlibDllSuffix)D.lib $(DllPrefix)glib32$(GlibDllSuffix)D.lib $(DllPrefix)gmodule32$(GlibDllSuffix)D.lib $(DllPrefix)gio32$(GlibDllSuffix)D.lib $(DllPrefix)JpegD.lib $(DllPrefix)TiffD.lib libstatic-pixbufloader_aniD.lib libstatic-pixbufloader_bmpD.lib libstatic-pixbufloader_gifD.lib libstatic-pixbufloader_icoD.lib libstatic-pixbufloader_jpegD.lib libstatic-pixbufloader_pcxD.lib libstatic-pixbufloader_pixdataD.lib libstatic-pixbufloader_pngD.lib libstatic-pixbufloader_pnmD.lib libstatic-pixbufloader_rasD.lib libstatic-pixbufloader_tgaD.lib libstatic-pixbufloader_tiffD.lib libstatic-pixbufloader_wbmpD.lib libstatic-pixbufloader_xbmD.lib libstatic-pixbufloader_xpmD.lib"
-				OutputFile="$(OutDir)\$(DllPrefix)$(ProjectName)$(DllSuffix)D.dll"
+				OutputFile="$(OutDir)\$(DllPrefix)$(ProjectName)32$(DllSuffix)D.dll"
 				AdditionalLibraryDirectories="&quot;$(ProjectDir)$(ConfigurationName)\lib&quot;;&quot;$(GenericWin32LibraryFolder)&quot;"
 				IgnoreDefaultLibraryNames="msvcrt.lib"
 				ModuleDefinitionFile="$(ProjectDir)\$(ProjectName).def"
@@ -169,7 +169,7 @@
 			<Tool
 				Name="VCLinkerTool"
 				AdditionalDependencies="intl.lib zlib1.lib $(DllPrefix)png12.lib $(DllPrefix)gobject32$(GlibDllSuffix).lib $(DllPrefix)glib32$(GlibDllSuffix).lib $(DllPrefix)gmodule32$(GlibDllSuffix).lib $(DllPrefix)gio32$(GlibDllSuffix).lib $(DllPrefix)Jpeg.lib $(DllPrefix)Tiff.lib libstatic-pixbufloader_ani.lib libstatic-pixbufloader_bmp.lib libstatic-pixbufloader_gif.lib libstatic-pixbufloader_ico.lib libstatic-pixbufloader_jpeg.lib libstatic-pixbufloader_pcx.lib libstatic-pixbufloader_pixdata.lib libstatic-pixbufloader_png.lib libstatic-pixbufloader_pnm.lib libstatic-pixbufloader_ras.lib libstatic-pixbufloader_tga.lib libstatic-pixbufloader_tiff.lib libstatic-pixbufloader_wbmp.lib libstatic-pixbufloader_xbm.lib libstatic-pixbufloader_xpm.lib"
-				OutputFile="$(OutDir)\$(DllPrefix)$(ProjectName)$(DllSuffix).dll"
+				OutputFile="$(OutDir)\$(DllPrefix)$(ProjectName)32$(DllSuffix).dll"
 				AdditionalLibraryDirectories="&quot;$(ProjectDir)$(ConfigurationName)\lib&quot;;&quot;$(GenericWin32LibraryFolder)&quot;"
 				IgnoreDefaultLibraryNames="libcmtd.lib"
 				ModuleDefinitionFile="$(ProjectDir)\$(ProjectName).def"
@@ -263,7 +263,7 @@
 			<Tool
 				Name="VCLinkerTool"
 				AdditionalDependencies="intlRDC.lib zlib1RDC.lib $(DllPrefix)png12RDC.lib $(DllPrefix)gobject32$(GlibDllSuffix)RDC.lib $(DllPrefix)glib32$(GlibDllSuffix)RDC.lib $(DllPrefix)gmodule32$(GlibDllSuffix)RDC.lib $(DllPrefix)gio32$(GlibDllSuffix)RDC.lib $(DllPrefix)JpegRDC.lib $(DllPrefix)TiffRDC.lib libstatic-pixbufloader_aniRDC.lib libstatic-pixbufloader_bmpRDC.lib libstatic-pixbufloader_gifRDC.lib libstatic-pixbufloader_icoRDC.lib libstatic-pixbufloader_jpegRDC.lib libstatic-pixbufloader_pcxRDC.lib libstatic-pixbufloader_pixdataRDC.lib libstatic-pixbufloader_pngRDC.lib libstatic-pixbufloader_pnmRDC.lib libstatic-pixbufloader_rasRDC.lib libstatic-pixbufloader_tgaRDC.lib libstatic-pixbufloader_tiffRDC.lib libstatic-pixbufloader_wbmpRDC.lib libstatic-pixbufloader_xbmRDC.lib libstatic-pixbufloader_xpmRDC.lib"
-				OutputFile="$(OutDir)\$(DllPrefix)$(ProjectName)$(DllSuffix)RDC.dll"
+				OutputFile="$(OutDir)\$(DllPrefix)$(ProjectName)32$(DllSuffix)RDC.dll"
 				AdditionalLibraryDirectories="&quot;$(ProjectDir)$(ConfigurationName)\lib&quot;;&quot;$(GenericWin32LibraryFolder)&quot;"
 				IgnoreDefaultLibraryNames="libcmtd.lib"
 				ModuleDefinitionFile="$(ProjectDir)\$(ProjectName).def"

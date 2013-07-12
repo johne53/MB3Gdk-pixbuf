@@ -67,8 +67,8 @@
 			/>
 			<Tool
 				Name="VCLinkerTool"
-				AdditionalDependencies="$(DllPrefix)gdk-pixbuf$(DllSuffix)D.lib $(DllPrefix)gobject32$(GlibDllSuffix)D.lib $(DllPrefix)glib32$(GlibDllSuffix)D.lib $(DllPrefix)png12D.lib"
-				OutputFile="$(OutDir)\$(DllPrefix)$(ProjectName)D.dll"
+				AdditionalDependencies="$(DllPrefix)gdk-pixbuf32$(DllSuffix)D.lib $(DllPrefix)gobject32$(GlibDllSuffix)D.lib $(DllPrefix)glib32$(GlibDllSuffix)D.lib $(DllPrefix)png12D.lib"
+				OutputFile="$(OutDir)\$(DllPrefix)$(ProjectName)32D.dll"
 				AdditionalLibraryDirectories="&quot;$(ProjectDir)$(ConfigurationName)\lib&quot;;&quot;$(GenericWin32LibraryFolder)&quot;"
 				ModuleDefinitionFile="$(ProjectDir)\$(ConfigurationName)\bin\loaders\pixbuf-loaders.def"
 				GenerateDebugInformation="true"
@@ -156,8 +156,8 @@
 			/>
 			<Tool
 				Name="VCLinkerTool"
-				AdditionalDependencies="$(DllPrefix)gdk-pixbuf$(DllSuffix).lib $(DllPrefix)gobject32$(GlibDllSuffix).lib $(DllPrefix)glib32$(GlibDllSuffix).lib $(DllPrefix)png12.lib"
-				OutputFile="$(OutDir)\$(DllPrefix)$(ProjectName).dll"
+				AdditionalDependencies="$(DllPrefix)gdk-pixbuf32$(DllSuffix).lib $(DllPrefix)gobject32$(GlibDllSuffix).lib $(DllPrefix)glib32$(GlibDllSuffix).lib $(DllPrefix)png12.lib"
+				OutputFile="$(OutDir)\$(DllPrefix)$(ProjectName)32.dll"
 				AdditionalLibraryDirectories="&quot;$(ProjectDir)$(ConfigurationName)\lib&quot;;&quot;$(GenericWin32LibraryFolder)&quot;"
 				ModuleDefinitionFile="$(ProjectDir)\$(ConfigurationName)\bin\loaders\pixbuf-loaders.def"
 				SubSystem="2"
@@ -243,8 +243,8 @@
 			/>
 			<Tool
 				Name="VCLinkerTool"
-				AdditionalDependencies="$(DllPrefix)gdk-pixbuf$(DllSuffix)RDC.lib $(DllPrefix)gobject32$(GlibDllSuffix)RDC.lib $(DllPrefix)glib32$(GlibDllSuffix)RDC.lib $(DllPrefix)png12RDC.lib"
-				OutputFile="$(OutDir)\$(DllPrefix)$(ProjectName)RDC.dll"
+				AdditionalDependencies="$(DllPrefix)gdk-pixbuf32$(DllSuffix)RDC.lib $(DllPrefix)gobject32$(GlibDllSuffix)RDC.lib $(DllPrefix)glib32$(GlibDllSuffix)RDC.lib $(DllPrefix)png12RDC.lib"
+				OutputFile="$(OutDir)\$(DllPrefix)$(ProjectName)32RDC.dll"
 				AdditionalLibraryDirectories="&quot;$(ProjectDir)$(ConfigurationName)\lib&quot;;&quot;$(GenericWin32LibraryFolder)&quot;"
 				ModuleDefinitionFile="$(ProjectDir)\$(ConfigurationName)\bin\loaders\pixbuf-loaders.def"
 				GenerateDebugInformation="true"
