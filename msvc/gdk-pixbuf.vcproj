@@ -296,7 +296,7 @@
 			/>
 			<Tool
 				Name="VCPostBuildEventTool"
-				CommandLine="copy /Y &quot;..\gdk-pixbuf\gdk-pix*.h&quot; &quot;$(GenericIncludeFolder)\gtk-$(GtkApiVersion)\gdk-pixbuf&quot;&#x0D;&#x0A;del /F /Q &quot;$(GenericIncludeFolder)\gtk-$(GtkApiVersion)\gdk-pixbuf\gdk-pixbuf-marshal.h&quot;&#x0D;&#x0A;del /F /Q &quot;$(GenericIncludeFolder)\gtk-$(GtkApiVersion)\gdk-pixbuf\gdk-pixbuf-private.h&quot;&#x0D;&#x0A;copy /Y &quot;$(OutDir)\$(TargetName).dll&quot; &quot;$(Release32TargetFolder)\$(TargetName).dll&quot;&#x0D;&#x0A;copy /Y &quot;$(OutDir)\$(TargetName).dll&quot; &quot;$(Release32TestSuiteFolder)\$(TargetName).dll&quot;&#x0D;&#x0A;copy /Y &quot;$(OutDir)\$(TargetName).lib&quot; &quot;$(GenericWin32LibraryFolder)\$(TargetName).lib&quot;&#x0D;&#x0A;"
+				CommandLine="copy /Y &quot;..\gdk-pixbuf\gdk-pix*.h&quot; &quot;$(GenericIncludeFolder)\gtk-$(GtkApiVersion)\gdk-pixbuf&quot;&#x0D;&#x0A;del /F /Q &quot;$(GenericIncludeFolder)\gtk-$(GtkApiVersion)\gdk-pixbuf\gdk-pixbuf-marshal.h&quot;&#x0D;&#x0A;del /F /Q &quot;$(GenericIncludeFolder)\gtk-$(GtkApiVersion)\gdk-pixbuf\gdk-pixbuf-private.h&quot;&#x0D;&#x0A;copy /Y &quot;$(OutDir)\$(TargetName).dll&quot; &quot;$(Release32TestSuiteFolder)\$(TargetName).dll&quot;&#x0D;&#x0A;copy /Y &quot;$(OutDir)\$(TargetName).lib&quot; &quot;$(GenericWin32LibraryFolder)\$(TargetName).lib&quot;&#x0D;&#x0A;"
 			/>
 		</Configuration>
 	</Configurations>
