@@ -368,10 +368,6 @@
 			Filter="h;hpp;hxx;hm;inl;fi;fd"
 			>
 			<File
-				RelativePath="$(GdkPixbufBuildRootFolder)\gdk-pixbuf\gdk-pixbuf-alias.h"
-				>
-			</File>
-			<File
 				RelativePath="$(GdkPixbufBuildRootFolder)\gdk-pixbuf\gdk-pixbuf-i18n.h"
 				>
 			</File>
