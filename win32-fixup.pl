@@ -11,7 +11,7 @@ $interface_age = 0;
 $binary_age = 3001;
 $current_minus_age = 0;
 $gettext_package = "gdk-pixbuf20";
-$gdk_pixbuf_loaders_version = "v2.28"; # Used to locate the file, 'loaders.cache'. Change this only when absolutely necessary !
+$gdk_pixbuf_loaders_version = "v2.30"; # Used to locate the file, 'loaders.cache'. Change this only when absolutely necessary !
 
 sub process_file
 {
