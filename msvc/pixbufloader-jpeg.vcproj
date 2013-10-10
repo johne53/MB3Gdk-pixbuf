@@ -41,6 +41,7 @@
 			/>
 			<Tool
 				Name="VCCLCompilerTool"
+				AdditionalOptions="/FI$(TargetSxsFolder)\targetsxs.h"
 				Optimization="0"
 				AdditionalIncludeDirectories=".;&quot;$(GenericIncludeFolder)\gtk-$(GtkApiVersion)&quot;;&quot;$(GenericIncludeFolder)&quot;;&quot;$(GenericIncludeFolder)\cairo&quot;;&quot;$(GenericIncludeFolder)\pango-$(PangoApiVersion)&quot;;&quot;$(GenericIncludeFolder)\gtk-$(GtkApiVersion)\gdk&quot;;&quot;$(GenericIncludeFolder)\atk-$(AtkApiVersion)&quot;;&quot;$(GenericLibraryFolder)\gtk-$(GtkApiVersion)\include&quot;;&quot;$(GenericLibraryFolder)\glib-$(GlibApiVersion)\include&quot;;..\..\..\..\support\FreeImage\Source\libJPEG;.."
 				PreprocessorDefinitions="GTK_HOST=\&quot;win32\&quot;;GTK_PREFIX=\&quot;Not set (placeholder)\&quot;;GTK_LIBDIR=\&quot;Not set (placeholder)\&quot;;GTK_PRINT_BACKENDS=\&quot;file,lpr\&quot;;GTK_PRINT_PREVIEW_COMMAND=\&quot;evince --unlink-tempfile --preview %f\&quot;;WIN32;DEBUG;_DEBUG;_CRT_SECURE_NO_WARNINGS;_WINDOWS;G_OS_WIN32;HAVE_CONFIG_H;ENABLE_NLS=1;GDK_PIXBUF_ENABLE_BACKEND;GTK_PRINT_BACKEND_ENABLE_UNSUPPORTED;G_LOG_DOMAIN=\&quot;Gdk\&quot;;GDK_COMPILATION"
@@ -131,6 +132,7 @@
 			/>
 			<Tool
 				Name="VCCLCompilerTool"
+				AdditionalOptions="/FI$(TargetSxsFolder)\targetsxs.h"
 				Optimization="2"
 				InlineFunctionExpansion="1"
 				AdditionalIncludeDirectories=".;&quot;$(GenericIncludeFolder)\gtk-$(GtkApiVersion)&quot;;&quot;$(GenericIncludeFolder)&quot;;&quot;$(GenericIncludeFolder)\cairo&quot;;&quot;$(GenericIncludeFolder)\pango-$(PangoApiVersion)&quot;;&quot;$(GenericIncludeFolder)\gtk-$(GtkApiVersion)\gdk&quot;;&quot;$(GenericIncludeFolder)\atk-$(AtkApiVersion)&quot;;&quot;$(GenericLibraryFolder)\gtk-$(GtkApiVersion)\include&quot;;&quot;$(GenericLibraryFolder)\glib-$(GlibApiVersion)\include&quot;;..\..\..\..\support\FreeImage\Source\libJPEG;.."
@@ -219,6 +221,7 @@
 			/>
 			<Tool
 				Name="VCCLCompilerTool"
+				AdditionalOptions="/FI$(TargetSxsFolder)\targetsxs.h"
 				Optimization="0"
 				AdditionalIncludeDirectories=".;&quot;$(GenericIncludeFolder)\gtk-$(GtkApiVersion)&quot;;&quot;$(GenericIncludeFolder)&quot;;&quot;$(GenericIncludeFolder)\cairo&quot;;&quot;$(GenericIncludeFolder)\pango-$(PangoApiVersion)&quot;;&quot;$(GenericIncludeFolder)\gtk-$(GtkApiVersion)\gdk&quot;;&quot;$(GenericIncludeFolder)\atk-$(AtkApiVersion)&quot;;&quot;$(GenericLibraryFolder)\gtk-$(GtkApiVersion)\include&quot;;&quot;$(GenericLibraryFolder)\glib-$(GlibApiVersion)\include&quot;;..\..\..\..\support\FreeImage\Source\libJPEG;.."
 				PreprocessorDefinitions="_SECURE_SCL=0;GTK_HOST=\&quot;win32\&quot;;GTK_PREFIX=\&quot;Not set (placeholder)\&quot;;GTK_LIBDIR=\&quot;Not set (placeholder)\&quot;;GTK_PRINT_BACKENDS=\&quot;file,lpr\&quot;;GTK_PRINT_PREVIEW_COMMAND=\&quot;evince --unlink-tempfile --preview %f\&quot;;WIN32;NDEBUG;_CRT_SECURE_NO_WARNINGS;_WINDOWS;G_OS_WIN32;HAVE_CONFIG_H;ENABLE_NLS=1;GDK_PIXBUF_ENABLE_BACKEND;GTK_PRINT_BACKEND_ENABLE_UNSUPPORTED;G_LOG_DOMAIN=\&quot;Gdk\&quot;;GDK_COMPILATION"
