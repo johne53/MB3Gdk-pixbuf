@@ -12,6 +12,7 @@ $binary_age = 3001;
 $current_minus_age = 0;
 $gettext_package = "gdk-pixbuf20";
 $gdk_pixbuf_loaders_version = "v2.30"; # Used to locate the file, 'loaders.cache'. Change this only when absolutely necessary !
+$exec_prefix = "lib";
 
 sub process_file
 {
@@ -33,6 +34,7 @@ sub process_file
 	    s/\@GDK_PIXBUF_BINARY_AGE\@/$binary_age/g;
 	    s/\@GDK_PIXBUF_INTERFACE_AGE\@/$interface_age/g;
 	    s/\@LT_CURRENT_MINUS_AGE@/$current_minus_age/g;
+	    s/\@VERSION@/$gdk_pixbuf_version/g;
 	    s/\@GETTEXT_PACKAGE\@/$gettext_package/g;
 	    s/\@PERL_PATH@/$perl_path/g;
 	    s/\@GlibBuildRootFolder@/$glib_build_root_folder/g;
@@ -49,12 +51,17 @@ sub process_file
 	    s/\@Debug32PixbufLoadersFolder@/$debug32_pixbuf_loaders_folder/g;
 	    s/\@Release32PixbufLoadersFolder@/$release32_pixbuf_loaders_folder/g;
 	    s/\@TargetSxSFolder@/$target_sxs_folder/g;
+	    s/\@prefix@/$prefix/g;
+	    s/\@exec_prefix@/$exec_prefix/g;
+	    s/\@includedir@/$generic_include_folder/g;
+	    s/\@libdir@/$generic_library_folder/g;
 	    print OUTPUT;
 	}
 }
 
 process_file ("config.h.win32");
 process_file ("gdk-pixbuf/gdk-pixbuf-features.h");
+process_file ("gdk-pixbuf-2.0.pc");
 
 my $command=join(' ',@ARGV);
 if ($command eq -buildall) {
