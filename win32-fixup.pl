@@ -3,12 +3,12 @@
 
 require "../local-paths.lib";
 
-$gdk_pixbuf_version = "2.30.1";
+$gdk_pixbuf_version = "2.30.2";
 $major = 2;
 $minor = 30;
-$micro = 1;
-$interface_age = 0;
-$binary_age = 3001;
+$micro = 2;
+$interface_age = 2;
+$binary_age = 3002;
 $current_minus_age = 0;
 $gettext_package = "gdk-pixbuf20";
 $gdk_pixbuf_loaders_version = "v2.30"; # Used to locate the file, 'loaders.cache'. Change this only when absolutely necessary !
