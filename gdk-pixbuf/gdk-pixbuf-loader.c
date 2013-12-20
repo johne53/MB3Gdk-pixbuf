@@ -111,13 +111,11 @@ static guint    pixbuf_loader_signals[LAST_SIGNAL] = { 0 };
 
 /* Internal data */
 
-#define LOADER_HEADER_SIZE 1024
-
 typedef struct
 {
         GdkPixbufAnimation *animation;
         gboolean closed;
-        guchar header_buf[LOADER_HEADER_SIZE];
+        guchar header_buf[SNIFF_BUFFER_SIZE];
         gint header_buf_offset;
         GdkPixbufModule *image_module;
         gpointer context;
@@ -125,9 +123,11 @@ typedef struct
         gint height;
         gboolean size_fixed;
         gboolean needs_scale;
+	gchar *filename;
 } GdkPixbufLoaderPrivate;
 
 G_DEFINE_TYPE (GdkPixbufLoader, gdk_pixbuf_loader, G_TYPE_OBJECT)
+
 
 static void
 gdk_pixbuf_loader_class_init (GdkPixbufLoaderClass *class)
@@ -252,6 +252,8 @@ gdk_pixbuf_loader_finalize (GObject *object)
         if (priv->animation)
                 g_object_unref (priv->animation);
   
+	g_free (priv->filename);
+
         g_free (priv);
   
         G_OBJECT_CLASS (gdk_pixbuf_loader_parent_class)->finalize (object);
@@ -327,8 +329,10 @@ gdk_pixbuf_loader_prepare (GdkPixbuf          *pixbuf,
 
         if (!priv->size_fixed) 
                 {
+			gint w = width;
+			gint h = height;
                         /* Defend against lazy loaders which don't call size_func */
-                        gdk_pixbuf_loader_size_func (&width, &height, loader);
+                        gdk_pixbuf_loader_size_func (&w, &h, loader);
                 }
 
         priv->needs_scale = FALSE;
@@ -412,7 +416,7 @@ gdk_pixbuf_loader_load_module (GdkPixbufLoader *loader,
                 {
                         priv->image_module = _gdk_pixbuf_get_module (priv->header_buf,
                                                                      priv->header_buf_offset,
-                                                                     NULL,
+                                                                     priv->filename,
                                                                      error);
                 }
   
@@ -466,12 +470,12 @@ gdk_pixbuf_loader_eat_header_write (GdkPixbufLoader *loader,
         gint n_bytes;
         GdkPixbufLoaderPrivate *priv = loader->priv;
   
-        n_bytes = MIN(LOADER_HEADER_SIZE - priv->header_buf_offset, count);
+        n_bytes = MIN(SNIFF_BUFFER_SIZE - priv->header_buf_offset, count);
         memcpy (priv->header_buf + priv->header_buf_offset, buf, n_bytes);
   
         priv->header_buf_offset += n_bytes;
   
-        if (priv->header_buf_offset >= LOADER_HEADER_SIZE)
+        if (priv->header_buf_offset >= SNIFF_BUFFER_SIZE)
                 {
                         if (gdk_pixbuf_loader_load_module (loader, NULL, error) == 0)
                                 return 0;
@@ -702,6 +706,19 @@ gdk_pixbuf_loader_new_with_mime_type (const char *mime_type,
         return retval;
 }
 
+GdkPixbufLoader *
+_gdk_pixbuf_loader_new_with_filename (const char *filename)
+{
+	GdkPixbufLoader *retval;
+        GdkPixbufLoaderPrivate *priv;
+
+        retval = g_object_new (GDK_TYPE_PIXBUF_LOADER, NULL);
+	priv = retval->priv;
+	priv->filename = g_strdup (filename);
+
+	return retval;
+}
+
 /**
  * gdk_pixbuf_loader_get_pixbuf:
  * @loader: A pixbuf loader.
@@ -797,7 +814,7 @@ gdk_pixbuf_loader_close (GdkPixbufLoader *loader,
         if (priv->closed)
                 return TRUE;
   
-        /* We have less the LOADER_HEADER_SIZE bytes in the image.  
+        /* We have less than SNIFF_BUFFER_SIZE bytes in the image.  
          * Flush it, and keep going. 
          */
         if (priv->image_module == NULL)

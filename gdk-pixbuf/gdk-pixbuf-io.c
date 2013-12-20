@@ -47,8 +47,6 @@
 #undef STRICT
 #endif
 
-#define SNIFF_BUFFER_SIZE 4096
-
 /**
  * SECTION:file-loading
  * @Short_description: Loading a pixbuf from a file.
@@ -885,7 +883,7 @@ _gdk_pixbuf_get_module (guchar *buffer, guint size,
         gboolean uncertain;
 
         mime_type = g_content_type_guess (NULL, buffer, size, &uncertain);
-        if (uncertain && filename != NULL) {
+        if ((uncertain || g_str_equal (mime_type, "text/plain")) && filename != NULL) {
                 g_free (mime_type);
                 mime_type = g_content_type_guess (filename, buffer, size, NULL);
         }
@@ -961,6 +959,28 @@ _gdk_pixbuf_get_module (guchar *buffer, guint size,
         return NULL;
 }
 
+static
+GdkPixbufModule *
+_gdk_pixbuf_get_module_for_file (FILE *f, const gchar *filename, GError **error)
+{
+        guchar buffer[SNIFF_BUFFER_SIZE];
+        int size;
+
+        size = fread (&buffer, 1, sizeof (buffer), f);
+        if (size == 0) {
+		gchar *display_name;
+        	display_name = g_filename_display_name (filename);      
+                g_set_error (error,
+                             GDK_PIXBUF_ERROR,
+                             GDK_PIXBUF_ERROR_CORRUPT_IMAGE,
+                             _("Image file '%s' contains no data"),
+                             display_name);
+                g_free (display_name);
+                return NULL;
+        }
+
+	return _gdk_pixbuf_get_module (buffer, size, filename, error);
+}
 
 static void
 prepared_notify (GdkPixbuf *pixbuf, 
@@ -972,46 +992,57 @@ prepared_notify (GdkPixbuf *pixbuf,
         *((GdkPixbuf **)user_data) = pixbuf;
 }
 
-GdkPixbuf *
-_gdk_pixbuf_generic_image_load (GdkPixbufModule *module,
-                                FILE *f,
-                                GError **error)
+static GdkPixbuf *
+generic_load_incrementally (GdkPixbufModule *module, FILE *f, GError **error)
 {
-        guchar buffer[LOAD_BUFFER_SIZE];
-        size_t length;
         GdkPixbuf *pixbuf = NULL;
-        GdkPixbufAnimation *animation = NULL;
-        gpointer context;
+	gpointer context;
+
+	context = module->begin_load (NULL, prepared_notify, NULL, &pixbuf, error);
+        
+	if (!context)
+		goto out;
+                
+	while (!feof (f) && !ferror (f)) {
+		guchar buffer[LOAD_BUFFER_SIZE];
+		size_t length;
+
+		length = fread (buffer, 1, sizeof (buffer), f);
+		if (length > 0) {
+			if (!module->load_increment (context, buffer, length, error)) {
+				module->stop_load (context, NULL);
+				if (pixbuf != NULL) {
+					g_object_unref (pixbuf);
+					pixbuf = NULL;
+				}
+				goto out;
+			}
+		}
+	}
+
+	if (!module->stop_load (context, error)) {
+		if (pixbuf != NULL) {
+			g_object_unref (pixbuf);
+			pixbuf = NULL;
+		}
+	}
+
+out:
+	return pixbuf;
+}
+
+GdkPixbuf *
+_gdk_pixbuf_generic_image_load (GdkPixbufModule *module, FILE *f, GError **error)
+{
+        GdkPixbuf *pixbuf = NULL;
 
         if (module->load != NULL) {
                 pixbuf = (* module->load) (f, error);
         } else if (module->begin_load != NULL) {
-                
-                context = module->begin_load (NULL, prepared_notify, NULL, &pixbuf, error);
-        
-                if (!context)
-                        goto out;
-                
-                while (!feof (f) && !ferror (f)) {
-                        length = fread (buffer, 1, sizeof (buffer), f);
-                        if (length > 0)
-                                if (!module->load_increment (context, buffer, length, error)) {
-                                        module->stop_load (context, NULL);
-                                        if (pixbuf != NULL) {
-                                                g_object_unref (pixbuf);
-                                                pixbuf = NULL;
-                                        }
-                                        goto out;
-                                }
-                }
-                
-                if (!module->stop_load (context, error)) {
-                        if (pixbuf != NULL) {
-                                g_object_unref (pixbuf);
-                                pixbuf = NULL;
-                        }
-                }
+        	pixbuf = generic_load_incrementally (module, f, error);
         } else if (module->load_animation != NULL) {
+		GdkPixbufAnimation *animation;
+
                 animation = (* module->load_animation) (f, error);
                 if (animation != NULL) {
                         pixbuf = gdk_pixbuf_animation_get_static_image (animation);
@@ -1021,7 +1052,6 @@ _gdk_pixbuf_generic_image_load (GdkPixbufModule *module,
                 }
         }
 
- out:
         return pixbuf;
 }
 
@@ -1044,20 +1074,17 @@ gdk_pixbuf_new_from_file (const char *filename,
                           GError    **error)
 {
         GdkPixbuf *pixbuf;
-        int size;
         FILE *f;
-        guchar buffer[SNIFF_BUFFER_SIZE];
         GdkPixbufModule *image_module;
-        gchar *display_name;
 
         g_return_val_if_fail (filename != NULL, NULL);
         g_return_val_if_fail (error == NULL || *error == NULL, NULL);
         
-        display_name = g_filename_display_name (filename);      
-
         f = g_fopen (filename, "rb");
         if (!f) {
                 gint save_errno = errno;
+		gchar *display_name;
+        	display_name = g_filename_display_name (filename);      
                 g_set_error (error,
                              G_FILE_ERROR,
                              g_file_error_from_errno (save_errno),
@@ -1068,27 +1095,13 @@ gdk_pixbuf_new_from_file (const char *filename,
                 return NULL;
         }
 
-        size = fread (&buffer, 1, sizeof (buffer), f);
-        if (size == 0) {
-                g_set_error (error,
-                             GDK_PIXBUF_ERROR,
-                             GDK_PIXBUF_ERROR_CORRUPT_IMAGE,
-                             _("Image file '%s' contains no data"),
-                             display_name);
-                g_free (display_name);
-                fclose (f);
-                return NULL;
-        }
-
-        image_module = _gdk_pixbuf_get_module (buffer, size, filename, error);
+        image_module = _gdk_pixbuf_get_module_for_file (f, filename, error);
         if (image_module == NULL) {
-                g_free (display_name);
                 fclose (f);
                 return NULL;
         }
 
         if (!_gdk_pixbuf_load_module (image_module, error)) {
-                g_free (display_name);
                 fclose (f);
                 return NULL;
         }
@@ -1105,26 +1118,30 @@ gdk_pixbuf_new_from_file (const char *filename,
                  * the invariant that error gets set if NULL is returned.
                  */
 
+		gchar *display_name;
+        	display_name = g_filename_display_name (filename);      
                 g_warning ("Bug! gdk-pixbuf loader '%s' didn't set an error on failure.", image_module->module_name);
                 g_set_error (error,
                              GDK_PIXBUF_ERROR,
                              GDK_PIXBUF_ERROR_FAILED,
                              _("Failed to load image '%s': reason not known, probably a corrupt image file"),
                              display_name);
+		g_free (display_name);
         } else if (error != NULL && *error != NULL) {
+		/* Add the filename to the error message */
+		GError *e = *error;
+		gchar  *old;
+		gchar *display_name;
 
-          /* Add the filename to the error message */
-          GError *e = *error;
-          gchar  *old;
-
-          old = e->message;
-          e->message = g_strdup_printf (_("Failed to load image '%s': %s"),
-                                        display_name,
-                                        old);
-          g_free (old);
+        	display_name = g_filename_display_name (filename);      
+		old = e->message;
+		e->message = g_strdup_printf (_("Failed to load image '%s': %s"),
+					      display_name,
+					      old);
+		g_free (old);
+		g_free (display_name);
         }
 
-        g_free (display_name);
         return pixbuf;
 }
 
@@ -1334,7 +1351,7 @@ gdk_pixbuf_new_from_file_at_scale (const char *filename,
                 return NULL;
         }
 
-        loader = gdk_pixbuf_loader_new ();
+        loader = _gdk_pixbuf_loader_new_with_filename (filename);
 
         info.width = width;
         info.height = height;
@@ -1536,29 +1553,28 @@ gdk_pixbuf_new_from_stream_at_scale (GInputStream  *stream,
 }
 
 static void
-new_from_stream_thread (GSimpleAsyncResult *result,
+new_from_stream_thread (GTask              *task,
 			GInputStream       *stream,
+			AtScaleData        *data,
 			GCancellable       *cancellable)
 {
-	GdkPixbuf *pixbuf;
-	AtScaleData *data;
+	GdkPixbuf *pixbuf = NULL;
 	GError *error = NULL;
 
 	/* If data != NULL, we're scaling the pixbuf while loading it */
-	data = g_simple_async_result_get_op_res_gpointer (result);
 	if (data != NULL)
 		pixbuf = gdk_pixbuf_new_from_stream_at_scale (stream, data->width, data->height, data->preserve_aspect_ratio, cancellable, &error);
 	else
 		pixbuf = gdk_pixbuf_new_from_stream (stream, cancellable, &error);
 
-	g_simple_async_result_set_op_res_gpointer (result, NULL, NULL);
-
 	/* Set the new pixbuf as the result, or error out */
 	if (pixbuf == NULL) {
-		g_simple_async_result_take_error (result, error);
+		g_task_return_error (task, error);
 	} else {
-		g_simple_async_result_set_op_res_gpointer (result, g_object_ref (pixbuf), g_object_unref);
+		g_task_return_pointer (task, g_object_ref (pixbuf), g_object_unref);
 	}
+
+        g_clear_object (&pixbuf);
 }
 
 /**
@@ -1590,7 +1606,7 @@ gdk_pixbuf_new_from_stream_at_scale_async (GInputStream        *stream,
 					   GAsyncReadyCallback  callback,
 					   gpointer             user_data)
 {
-	GSimpleAsyncResult *result;
+	GTask *task;
 	AtScaleData *data;
 
 	g_return_if_fail (G_IS_INPUT_STREAM (stream));
@@ -1602,10 +1618,11 @@ gdk_pixbuf_new_from_stream_at_scale_async (GInputStream        *stream,
 	data->height = height;
 	data->preserve_aspect_ratio = preserve_aspect_ratio;
 
-	result = g_simple_async_result_new (G_OBJECT (stream), callback, user_data, gdk_pixbuf_new_from_stream_at_scale_async);
-	g_simple_async_result_set_op_res_gpointer (result, data, (GDestroyNotify) at_scale_data_async_data_free);
-	g_simple_async_result_run_in_thread (result, (GSimpleAsyncThreadFunc) new_from_stream_thread, G_PRIORITY_DEFAULT, cancellable);
-	g_object_unref (result);
+	task = g_task_new (stream, cancellable, callback, user_data);
+	g_task_set_source_tag (task, gdk_pixbuf_new_from_stream_at_scale_async);
+	g_task_set_task_data (task, data, (GDestroyNotify) at_scale_data_async_data_free);
+	g_task_run_in_thread (task, (GTaskThreadFunc) new_from_stream_thread);
+	g_object_unref (task);
 }
 
 /**
@@ -1790,15 +1807,16 @@ gdk_pixbuf_new_from_stream_async (GInputStream        *stream,
 				  GAsyncReadyCallback  callback,
 				  gpointer             user_data)
 {
-	GSimpleAsyncResult *result;
+	GTask *task;
 
 	g_return_if_fail (G_IS_INPUT_STREAM (stream));
 	g_return_if_fail (callback != NULL);
 	g_return_if_fail (!cancellable || G_IS_CANCELLABLE (cancellable));
 
-	result = g_simple_async_result_new (G_OBJECT (stream), callback, user_data, gdk_pixbuf_new_from_stream_async);
-	g_simple_async_result_run_in_thread (result, (GSimpleAsyncThreadFunc) new_from_stream_thread, G_PRIORITY_DEFAULT, cancellable);
-	g_object_unref (result);
+	task = g_task_new (stream, cancellable, callback, user_data);
+	g_task_set_source_tag (task, gdk_pixbuf_new_from_stream_async);
+	g_task_run_in_thread (task, (GTaskThreadFunc) new_from_stream_thread);
+	g_object_unref (task);
 }
 
 /**
@@ -1818,17 +1836,20 @@ GdkPixbuf *
 gdk_pixbuf_new_from_stream_finish (GAsyncResult  *async_result,
 				   GError       **error)
 {
-	GSimpleAsyncResult *result = G_SIMPLE_ASYNC_RESULT (async_result);
+	GTask *task;
 
-	g_return_val_if_fail (G_IS_ASYNC_RESULT (async_result), NULL);
+	/* Can not use g_task_is_valid because our GTask has a
+	 * source_object which is not available to us anymore.
+	 */
+	g_return_val_if_fail (G_IS_TASK (async_result), NULL);
+
+	task = G_TASK (async_result);
+
 	g_return_val_if_fail (!error || (error && !*error), NULL);
-	g_warn_if_fail (g_simple_async_result_get_source_tag (result) == gdk_pixbuf_new_from_stream_async ||
-			g_simple_async_result_get_source_tag (result) == gdk_pixbuf_new_from_stream_at_scale_async);
+	g_warn_if_fail (g_task_get_source_tag (task) == gdk_pixbuf_new_from_stream_async ||
+			g_task_get_source_tag (task) == gdk_pixbuf_new_from_stream_at_scale_async);
 
-	if (g_simple_async_result_propagate_error (result, error))
-		return NULL;
-
-	return g_simple_async_result_get_op_res_gpointer (result);
+	return g_task_propagate_pointer (task, error);
 }
 
 static void
@@ -1888,7 +1909,7 @@ gdk_pixbuf_get_file_info (const gchar  *filename,
         if (!f)
                 return NULL;
 
-        loader = gdk_pixbuf_loader_new ();
+        loader = _gdk_pixbuf_loader_new_with_filename (filename);
 
         info.format = NULL;
         info.width = -1;
@@ -2803,16 +2824,15 @@ save_to_stream_async_data_free (SaveToStreamAsyncData *data)
 }
 
 static void
-save_to_stream_thread (GSimpleAsyncResult *result,
-		       GdkPixbuf          *pixbuf,
-		       GCancellable       *cancellable)
+save_to_stream_thread (GTask                 *task,
+		       GdkPixbuf             *pixbuf,
+		       SaveToStreamAsyncData *data,
+		       GCancellable          *cancellable)
 {
-	SaveToStreamAsyncData *data;
 	SaveToStreamData sync_data;
 	gboolean retval;
 	GError *error = NULL;
 
-	data = g_simple_async_result_get_op_res_gpointer (result);
 	sync_data.stream = data->stream;
 	sync_data.cancellable = cancellable;
 
@@ -2821,11 +2841,10 @@ save_to_stream_thread (GSimpleAsyncResult *result,
 					       data->keys, data->values,
 					       &error);
 
-	/* Set the new pixbuf as the result, or error out */
 	if (retval == FALSE) {
-		g_simple_async_result_take_error (result, error);
+		g_task_return_error (task, error);
 	} else {
-		g_simple_async_result_set_op_res_gboolean (result, TRUE);
+		g_task_return_boolean (task, TRUE);
 	}
 }
 
@@ -2858,7 +2877,7 @@ gdk_pixbuf_save_to_stream_async (GdkPixbuf           *pixbuf,
 				 gpointer             user_data,
 				 ...)
 {
-	GSimpleAsyncResult *result;
+	GTask *task;
 	gchar **keys = NULL;
 	gchar **values = NULL;
 	va_list args;
@@ -2880,10 +2899,11 @@ gdk_pixbuf_save_to_stream_async (GdkPixbuf           *pixbuf,
 	data->keys = keys;
 	data->values = values;
 
-	result = g_simple_async_result_new (G_OBJECT (pixbuf), callback, user_data, gdk_pixbuf_save_to_stream_async);
-	g_simple_async_result_set_op_res_gpointer (result, data, (GDestroyNotify) save_to_stream_async_data_free);
-	g_simple_async_result_run_in_thread (result, (GSimpleAsyncThreadFunc) save_to_stream_thread, G_PRIORITY_DEFAULT, cancellable);
-	g_object_unref (result);
+	task = g_task_new (pixbuf, cancellable, callback, user_data);
+	g_task_set_source_tag (task, gdk_pixbuf_save_to_stream_async);
+	g_task_set_task_data (task, data, (GDestroyNotify) save_to_stream_async_data_free);
+	g_task_run_in_thread (task, (GTaskThreadFunc) save_to_stream_thread);
+	g_object_unref (task);
 }
 
 /**
@@ -2902,16 +2922,19 @@ gboolean
 gdk_pixbuf_save_to_stream_finish (GAsyncResult  *async_result,
 				  GError       **error)
 {
-	GSimpleAsyncResult *result = G_SIMPLE_ASYNC_RESULT (async_result);
+	GTask *task;
 
-	g_return_val_if_fail (G_IS_ASYNC_RESULT (async_result), FALSE);
+	/* Can not use g_task_is_valid because our GTask has a
+	 * source_object which is not available to us anymore.
+	 */
+	g_return_val_if_fail (G_IS_TASK (async_result), FALSE);
+
+	task = G_TASK (async_result);
+
 	g_return_val_if_fail (!error || (error && !*error), FALSE);
-	g_warn_if_fail (g_simple_async_result_get_source_tag (result) == gdk_pixbuf_save_to_stream_async);
+	g_warn_if_fail (g_task_get_source_tag (task) == gdk_pixbuf_save_to_stream_async);
 
-	if (g_simple_async_result_propagate_error (result, error))
-		return FALSE;
-
-	return g_simple_async_result_get_op_res_gboolean (result);
+	return g_task_propagate_boolean (task, error);
 }
 
 /**

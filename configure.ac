@@ -15,8 +15,8 @@ AC_PREREQ([2.63])
 
 m4_define([gdk_pixbuf_major_version], [2])
 m4_define([gdk_pixbuf_minor_version], [30])
-m4_define([gdk_pixbuf_micro_version], [2])
-m4_define([gdk_pixbuf_interface_age], [2])
+m4_define([gdk_pixbuf_micro_version], [3])
+m4_define([gdk_pixbuf_interface_age], [3])
 m4_define([gdk_pixbuf_binary_age],
           [m4_eval(100 * gdk_pixbuf_minor_version + gdk_pixbuf_micro_version)])
 m4_define([gdk_pixbuf_version],
@@ -26,7 +26,7 @@ m4_define([gdk_pixbuf_binary_version], [2.10.0])
 
 
 # required versions of other packages
-m4_define([glib_required_version], [2.37.2])
+m4_define([glib_required_version], [2.37.6])
 
 AC_INIT([gdk-pixbuf], [gdk_pixbuf_version],
         [http://bugzilla.gnome.org/enter_bug.cgi?product=gdk-pixbuf],
@@ -91,6 +91,7 @@ AC_PROG_CC_C_O
 AC_PROG_CC_STDC
 AC_PROG_INSTALL
 AC_PROG_MAKE_SET
+AC_PROG_AWK
 PKG_PROG_PKG_CONFIG
 
 AC_CANONICAL_HOST
