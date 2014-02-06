@@ -14,13 +14,13 @@
  * GNU General Public License for more details.
  *
  * You should have received a copy of the GNU General Public License
- * along with this program; if not, write to the Free Software
- * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307, USA.
+ * along with this program; if not, see <http://www.gnu.org/licenses/>.
  *
  * Author: Matthias Clasen
  */
 
 #include "gdk-pixbuf/gdk-pixbuf.h"
+#include "test-common.h"
 #include <string.h>
 
 #define compare_option(p1, p2, key) \
@@ -76,6 +76,12 @@ test_save_roundtrip (void)
   GdkPixbuf *ref;
   GdkPixbuf *pixbuf;
 
+  if (!format_supported ("png"))
+    {
+      g_test_skip ("format not supported");
+      return;
+    }
+
   ref = gdk_pixbuf_new_from_file (g_test_get_filename (G_TEST_DIST, "test-image.png", NULL), &error);
   g_assert_no_error (error);
 
@@ -98,13 +104,21 @@ test_save_options (void)
   GdkPixbuf *pixbuf;
   GError *error = NULL;
 
+  if (!format_supported ("png"))
+    {
+      g_test_skip ("format not supported");
+      return;
+    }
+
   ref = gdk_pixbuf_new (GDK_COLORSPACE_RGB, FALSE, 8, 10, 10);
   gdk_pixbuf_fill (ref, 0xff00ff00);
 
   gdk_pixbuf_save (ref, "pixbuf-save-options", "png", &error,
                    "tEXt::option1", "Some text to transport via option",
                    "tEXt::long-option-name123456789123456789123456789", "",
+#ifdef PNG_iTXt_SUPPORTED
                    "tEXt::3", "αβγδ",
+#endif
                    NULL);
   g_assert_no_error (error);
 
@@ -113,7 +127,9 @@ test_save_options (void)
 
   g_assert_cmpstr (gdk_pixbuf_get_option (pixbuf, "tEXt::option1"), ==, "Some text to transport via option");
   g_assert_cmpstr (gdk_pixbuf_get_option (pixbuf, "tEXt::long-option-name123456789123456789123456789"), ==, "");
+#ifdef PNG_iTXt_SUPPORTED
   g_assert_cmpstr (gdk_pixbuf_get_option (pixbuf, "tEXt::3"), ==, "αβγδ");
+#endif
 
   g_object_unref (pixbuf);
   g_object_unref (ref);

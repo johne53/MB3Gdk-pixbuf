@@ -14,14 +14,14 @@
  * GNU General Public License for more details.
  *
  * You should have received a copy of the GNU General Public License
- * along with this program; if not, write to the Free Software
- * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307, USA.
+ * along with this program; if not, see <http://www.gnu.org/licenses/>.
  *
  * Author: Matthias Clasen
  */
 
 #include "config.h"
 #include "gdk-pixbuf/gdk-pixbuf.h"
+#include "test-common.h"
 #include <string.h>
 
 #define compare_option(p1, p2, key) \
@@ -77,6 +77,12 @@ test_resource (void)
   GError *error = NULL;
   GdkPixbuf *pixbuf, *ref;
 
+  if (!format_supported ("png"))
+    {
+      g_test_skip ("format not supported");
+      return;
+    }
+
   path = g_test_get_filename (G_TEST_DIST, "icc-profile.png", NULL);
   ref = gdk_pixbuf_new_from_file (path, &error);
   g_assert_no_error (error);
@@ -110,6 +116,12 @@ test_resource_at_scale (void)
   const gchar *path;
   GError *error = NULL;
   GdkPixbuf *pixbuf, *ref;
+
+  if (!format_supported ("png"))
+    {
+      g_test_skip ("format not supported");
+      return;
+    }
 
   path = g_test_get_filename (G_TEST_DIST, "icc-profile.png", NULL);
   ref = gdk_pixbuf_new_from_file_at_scale (path, 40, 10, FALSE, &error);

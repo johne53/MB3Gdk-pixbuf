@@ -14,14 +14,14 @@
  * GNU General Public License for more details.
  *
  * You should have received a copy of the GNU General Public License
- * along with this program; if not, write to the Free Software
- * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307, USA.
+ * along with this program; if not, see <http://www.gnu.org/licenses/>.
  *
  * Author: Matthias Clasen
  */
 
 #include "config.h"
 #include "gdk-pixbuf/gdk-pixbuf.h"
+#include "test-common.h"
 
 static void
 test_scale (gconstpointer data)
@@ -32,6 +32,12 @@ test_scale (gconstpointer data)
   GdkPixbuf *ref;
   GdkPixbuf *pixbuf;
   gint width, height;
+
+  if (!format_supported (filename))
+    {
+      g_test_skip ("format not supported");
+      return;
+    }
 
   path = g_test_get_filename (G_TEST_DIST, filename, NULL);
   ref = gdk_pixbuf_new_from_file (path, &error);
