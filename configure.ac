@@ -15,8 +15,8 @@ AC_PREREQ([2.63])
 
 m4_define([gdk_pixbuf_major_version], [2])
 m4_define([gdk_pixbuf_minor_version], [30])
-m4_define([gdk_pixbuf_micro_version], [4])
-m4_define([gdk_pixbuf_interface_age], [4])
+m4_define([gdk_pixbuf_micro_version], [7])
+m4_define([gdk_pixbuf_interface_age], [7])
 m4_define([gdk_pixbuf_binary_age],
           [m4_eval(100 * gdk_pixbuf_minor_version + gdk_pixbuf_micro_version)])
 m4_define([gdk_pixbuf_version],
@@ -978,7 +978,7 @@ GOBJECT_INTROSPECTION_CHECK([0.9.3])
 # Checks for gtk-doc and docbook-tools
 ##################################################
 
-GTK_DOC_CHECK([1.11], [--flavour=no-tmpl])
+GTK_DOC_CHECK([1.20], [--flavour=no-tmpl])
 
 AC_CHECK_PROG(DB2HTML, db2html, true, false)
 AM_CONDITIONAL(HAVE_DOCBOOK, $DB2HTML)
