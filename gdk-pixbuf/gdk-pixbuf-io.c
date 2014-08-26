@@ -106,10 +106,10 @@
  * 
  * Installing a module is a two-step process:
  * - copy the module file(s) to the loader directory (normally
- *   `$libdir/gtk-2.0/$version/loaders`, unless overridden by the
+ *   `$libdir/gdk-pixbuf-2.0/$version/loaders`, unless overridden by the
  *   environment variable `GDK_PIXBUF_MODULEDIR`) 
  * - call gdk-pixbuf-query-loaders to update the module file (normally
- *   `$sysconfdir/gtk-2.0/gdk-pixbuf.loaders`, unless overridden by the
+ *   `$libdir/gdk-pixbuf-2.0/$version/loaders.cache`, unless overridden by the
  *   environment variable `GDK_PIXBUF_MODULE_FILE`)
  * 
  * The GdkPixBuf interfaces needed for implementing modules are contained in
@@ -334,7 +334,7 @@ correct_prefix (gchar **path)
 
       /* This is an entry put there by gdk-pixbuf-query-loaders on the
        * packager's system. On Windows a prebuilt gdk-pixbuf package can be
-       * installed in a random location. The gdk-pixbuf.loaders file
+       * installed in a random location. The loaders.cache file
        * distributed in such a package contains paths from the package
        * builder's machine. Replace the build-time prefix with the
        * installation prefix on this machine.
@@ -1496,11 +1496,16 @@ load_from_stream (GdkPixbufLoader  *loader,
  * the #GDK_PIXBUF_ERROR and %G_IO_ERROR domains. 
  *
  * The image will be scaled to fit in the requested size, optionally 
- * preserving the image's aspect ratio. When preserving the aspect ratio, 
- * a @width of -1 will cause the image to be scaled to the exact given 
- * height, and a @height of -1 will cause the image to be scaled to the 
- * exact given width. When not preserving aspect ratio, a @width or 
- * @height of -1 means to not scale the image at all in that dimension.
+ * preserving the image's aspect ratio.
+ *
+ * When preserving the aspect ratio, a @width of -1 will cause the image to be
+ * scaled to the exact given height, and a @height of -1 will cause the image
+ * to be scaled to the exact given width. If both @width and @height are
+ * given, this function will behave as if the smaller of the two values
+ * is passed as -1.
+ *
+ * When not preserving aspect ratio, a @width or @height of -1 means to not
+ * scale the image at all in that dimension.
  *
  * The stream is not closed.
  *
@@ -1862,14 +1867,16 @@ info_cb (GdkPixbufLoader *loader,
 /**
  * gdk_pixbuf_get_file_info:
  * @filename: The name of the file to identify.
- * @width: (out): Return location for the width of the image, or %NULL
- * @height: (out): Return location for the height of the image, or %NULL
+ * @width: (optional) (out): Return location for the width of the
+ *     image, or %NULL
+ * @height: (optional) (out): Return location for the height of the
+ *     image, or %NULL
  * 
  * Parses an image file far enough to determine its format and size.
  * 
- * Returns: (transfer none): A #GdkPixbufFormat describing the image
- *    format of the file or %NULL if the image format wasn't
- *    recognized. The return value is owned by GdkPixbuf and should
+ * Returns: (nullable) (transfer none): A #GdkPixbufFormat describing
+ *    the image format of the file or %NULL if the image format wasn't
+ *    recognized. The return value is owned by #GdkPixbuf and should
  *    not be freed.
  *
  * Since: 2.4
