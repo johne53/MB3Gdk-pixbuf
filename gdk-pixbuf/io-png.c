@@ -26,6 +26,7 @@
 #include <stdlib.h>
 #include <string.h>
 #include <png.h>
+#include <math.h>
 #include "gdk-pixbuf-private.h"
 
 
@@ -260,6 +261,10 @@ gdk_pixbuf__png_image_load (FILE *f, GError **error)
         const gchar *icc_profile_title;
         const gchar *icc_profile;
         png_uint_32 icc_profile_size;
+        png_uint_32 x_resolution;
+        png_uint_32 y_resolution;
+        int unit_type;
+        gchar *density_str;
         guint32 retval;
         gint compression_type;
 
@@ -345,6 +350,18 @@ gdk_pixbuf__png_image_load (FILE *f, GError **error)
                 icc_profile_base64 = g_base64_encode ((const guchar *) icc_profile, (gsize)icc_profile_size);
                 gdk_pixbuf_set_option (pixbuf, "icc-profile", icc_profile_base64);
                 g_free (icc_profile_base64);
+        }
+#endif
+
+#ifdef PNG_pHYs_SUPPORTED
+        retval = png_get_pHYs (png_ptr, info_ptr, &x_resolution, &y_resolution, &unit_type);
+        if (retval != 0 && unit_type == PNG_RESOLUTION_METER) {
+                density_str = g_strdup_printf ("%d", DPM_TO_DPI (x_resolution));
+                gdk_pixbuf_set_option (pixbuf, "x-dpi", density_str);
+                g_free (density_str);
+                density_str = g_strdup_printf ("%d", DPM_TO_DPI (y_resolution));
+                gdk_pixbuf_set_option (pixbuf, "y-dpi", density_str);
+                g_free (density_str);
         }
 #endif
 
@@ -496,6 +513,7 @@ static gboolean
 gdk_pixbuf__png_image_stop_load (gpointer context, GError **error)
 {
         LoadContext* lc = context;
+        gboolean retval = TRUE;
 
         g_return_val_if_fail(lc != NULL, TRUE);
 
@@ -505,11 +523,19 @@ gdk_pixbuf__png_image_stop_load (gpointer context, GError **error)
         
         if (lc->pixbuf)
                 g_object_unref (lc->pixbuf);
+        else {
+                if (error && *error == NULL) {
+                        g_set_error_literal (error, GDK_PIXBUF_ERROR,
+                                             GDK_PIXBUF_ERROR_CORRUPT_IMAGE,
+                                             _("Premature end-of-file encountered"));
+                }
+                retval = FALSE;
+	}
         
         png_destroy_read_struct(&lc->png_read_ptr, &lc->png_info_ptr, NULL);
         g_free(lc);
 
-        return TRUE;
+        return retval;
 }
 
 static gboolean
@@ -606,6 +632,10 @@ png_info_callback   (png_structp png_read_ptr,
         const gchar *icc_profile_title;
         const gchar *icc_profile;
         png_uint_32 icc_profile_size;
+        png_uint_32 x_resolution;
+        png_uint_32 y_resolution;
+        int unit_type;
+        gchar *density_str;
         guint32 retval;
         gint compression_type;
 
@@ -682,6 +712,18 @@ png_info_callback   (png_structp png_read_ptr,
                 icc_profile_base64 = g_base64_encode ((const guchar *) icc_profile, (gsize)icc_profile_size);
                 gdk_pixbuf_set_option (lc->pixbuf, "icc-profile", icc_profile_base64);
                 g_free (icc_profile_base64);
+        }
+#endif
+
+#ifdef PNG_pHYs_SUPPORTED
+        retval = png_get_pHYs (png_read_ptr, png_info_ptr, &x_resolution, &y_resolution, &unit_type);
+        if (retval != 0 && unit_type == PNG_RESOLUTION_METER) {
+                density_str = g_strdup_printf ("%d", DPM_TO_DPI (x_resolution));
+                gdk_pixbuf_set_option (lc->pixbuf, "x-dpi", density_str);
+                g_free (density_str);
+                density_str = g_strdup_printf ("%d", DPM_TO_DPI (y_resolution));
+                gdk_pixbuf_set_option (lc->pixbuf, "y-dpi", density_str);
+                g_free (density_str);
         }
 #endif
 
@@ -835,6 +877,8 @@ static gboolean real_save_png (GdkPixbuf        *pixbuf,
        int bpc;
        int num_keys;
        int compression = -1;
+       int x_density = 0;
+       int y_density = 0;
        gboolean success = TRUE;
        guchar *icc_profile = NULL;
        gsize icc_profile_size = 0;
@@ -905,6 +949,46 @@ static gboolean real_save_png (GdkPixbuf        *pixbuf,
                                                     GDK_PIXBUF_ERROR_BAD_OPTION,
                                                     _("PNG compression level must be a value between 0 and 9; value '%d' is not allowed."),
                                                     compression);
+                                       success = FALSE;
+                                       goto cleanup;
+                               }
+                       } else if (strcmp (*kiter, "x-dpi") == 0) {
+                               char *endptr = NULL;
+                               x_density = strtol (*viter, &endptr, 10);
+                               if (endptr == *viter)
+                                       x_density = -1;
+
+                               if (x_density <= 0) {
+                                       /* This is a user-visible error;
+                                        * lets people skip the range-checking
+                                        * in their app.
+                                        */
+                                       g_set_error (error,
+                                                    GDK_PIXBUF_ERROR,
+                                                    GDK_PIXBUF_ERROR_BAD_OPTION,
+                                                    _("PNG x-dpi must be greater than zero; value '%s' is not allowed."),
+                                                    *viter);
+
+                                       success = FALSE;
+                                       goto cleanup;
+                               }
+                       } else if (strcmp (*kiter, "y-dpi") == 0) {
+                               char *endptr = NULL;
+                               y_density = strtol (*viter, &endptr, 10);
+                               if (endptr == *viter)
+                                       y_density = -1;
+
+                               if (y_density <= 0) {
+                                       /* This is a user-visible error;
+                                        * lets people skip the range-checking
+                                        * in their app.
+                                        */
+                                       g_set_error (error,
+                                                    GDK_PIXBUF_ERROR,
+                                                    GDK_PIXBUF_ERROR_BAD_OPTION,
+                                                    _("PNG y-dpi must be greater than zero; value '%s' is not allowed."),
+                                                    *viter);
+
                                        success = FALSE;
                                        goto cleanup;
                                }
@@ -1006,6 +1090,11 @@ static gboolean real_save_png (GdkPixbuf        *pixbuf,
 
        if (compression >= 0)
                png_set_compression_level (png_ptr, compression);
+
+#ifdef PNG_pHYs_SUPPORTED
+       if (x_density > 0 && y_density > 0)
+               png_set_pHYs (png_ptr, info_ptr, DPI_TO_DPM (x_density), DPI_TO_DPM (y_density), PNG_RESOLUTION_METER);
+#endif
 
 #if defined(PNG_iCCP_SUPPORTED)
         /* the proper ICC profile title is encoded in the profile */
@@ -1114,7 +1203,7 @@ MODULE_ENTRY (fill_info) (GdkPixbufFormat *info)
 
 	info->name = "png";
         info->signature = (GdkPixbufModulePattern *) signature;
-	info->description = N_("The PNG image format");
+	info->description = NC_("image format", "PNG");
 	info->mime_types = (gchar **) mime_types;
 	info->extensions = (gchar **) extensions;
 	info->flags = GDK_PIXBUF_FORMAT_WRITABLE | GDK_PIXBUF_FORMAT_THREADSAFE;

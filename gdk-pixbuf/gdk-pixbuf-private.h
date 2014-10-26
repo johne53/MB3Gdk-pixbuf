@@ -28,11 +28,11 @@
 #include <stdio.h>
 
 #include <glib-object.h>
+#include <glib/gi18n.h>
 
 #include "gdk-pixbuf-core.h"
 #include "gdk-pixbuf-loader.h"
 #include "gdk-pixbuf-io.h"
-#include "gdk-pixbuf-i18n.h"
 
 #define LOAD_BUFFER_SIZE 65536
 #define SNIFF_BUFFER_SIZE 4096
@@ -44,6 +44,12 @@ typedef struct _GdkPixbufClass GdkPixbufClass;
 #define GDK_PIXBUF_CLASS(klass)      (G_TYPE_CHECK_CLASS_CAST ((klass), GDK_TYPE_PIXBUF, GdkPixbufClass))
 #define GDK_IS_PIXBUF_CLASS(klass)   (G_TYPE_CHECK_CLASS_TYPE ((klass), GDK_TYPE_PIXBUF))
 #define GDK_PIXBUF_GET_CLASS(obj)    (G_TYPE_INSTANCE_GET_CLASS ((obj), GDK_TYPE_PIXBUF, GdkPixbufClass))
+
+/* Helper macros to convert between density units */
+#define DPI_TO_DPM(value) ((int) round ((value) * 1000 / 25.4))
+#define DPI_TO_DPCM(value) ((int) round ((value) / 2.54))
+#define DPM_TO_DPI(value) ((int) round ((value) * 25.4 / 1000))
+#define DPCM_TO_DPI(value) ((int) round ((value) * 2.54))
 
 /* Private part of the GdkPixbuf structure */
 struct _GdkPixbuf {
@@ -107,6 +113,12 @@ GdkPixbufFormat *_gdk_pixbuf_get_format (GdkPixbufModule *image_module);
 GdkPixbuf * _gdk_pixbuf_new_from_resource_try_mmap (const char *resource_path);
 GdkPixbufLoader *_gdk_pixbuf_loader_new_with_filename (const char *filename);
 
+void _gdk_pixbuf_init_gettext (void);
+
 #endif /* GDK_PIXBUF_PRIVATE_H */
 
+#ifdef GDK_PIXBUF_RELOCATABLE
 
+gchar * gdk_pixbuf_get_toplevel (void);
+
+#endif /* G_OS_WIN32 */

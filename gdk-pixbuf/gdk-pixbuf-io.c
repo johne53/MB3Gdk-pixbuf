@@ -44,6 +44,9 @@
 #include <windows.h>
 #undef STRICT
 #endif
+#ifdef OS_DARWIN
+#include <mach-o/dyld.h>
+#endif
 
 /**
  * SECTION:file-loading
@@ -208,17 +211,6 @@ DllMain (HINSTANCE hinstDLL,
 
   return TRUE;
 }
-
-char *
-_gdk_pixbuf_win32_get_toplevel (void)
-{
-  static char *toplevel = NULL;
-
-  if (toplevel == NULL)
-          toplevel = g_win32_get_package_installation_directory_of_module (gdk_pixbuf_dll);
-
-  return toplevel;
-}
 #endif
 
 
@@ -302,8 +294,40 @@ skip_space (const char **pos)
         
         return !(*p == '\0');
 }
-  
-#ifdef G_OS_WIN32
+
+#ifdef GDK_PIXBUF_RELOCATABLE
+
+gchar *
+gdk_pixbuf_get_toplevel (void)
+{
+  static gchar *toplevel = NULL;
+
+  if (toplevel == NULL) {
+#if defined(G_OS_WIN32)
+    toplevel = g_win32_get_package_installation_directory_of_module (gdk_pixbuf_dll);
+#elif defined(OS_DARWIN)
+    char pathbuf[PATH_MAX + 1];
+    uint32_t  bufsize = sizeof(pathbuf);
+    gchar *bin_dir;
+
+    _NSGetExecutablePath(pathbuf, &bufsize);
+    bin_dir = g_dirname(pathbuf);
+    toplevel = g_build_path (G_DIR_SEPARATOR_S, bin_dir, "..", NULL);
+    g_free (bin_dir);
+#elif defined (OS_LINUX)
+    gchar *exe_path, *bin_dir;
+
+    exe_path = g_file_read_link ("/proc/self/exe", NULL);
+    bin_dir = g_dirname(exe_path);
+    toplevel = g_build_path (G_DIR_SEPARATOR_S, bin_dir, "..", NULL);
+    g_free (exe_path);
+    g_free (bin_dir);
+#else
+#error "Relocations not supported for this platform"
+#endif
+  }
+  return toplevel;
+}
 
 static char *
 get_libdir (void)
@@ -311,7 +335,7 @@ get_libdir (void)
   static char *libdir = NULL;
 
   if (libdir == NULL)
-          libdir = g_build_filename (_gdk_pixbuf_win32_get_toplevel (), "lib", NULL);
+          libdir = g_build_filename (gdk_pixbuf_get_toplevel (), "lib", NULL);
 
   return libdir;
 }
@@ -340,12 +364,12 @@ correct_prefix (gchar **path)
        * installation prefix on this machine.
        */
       tem = *path;
-      *path = g_strconcat (_gdk_pixbuf_win32_get_toplevel (), tem + strlen (GDK_PIXBUF_PREFIX), NULL);
+      *path = g_strconcat (gdk_pixbuf_get_toplevel (), tem + strlen (GDK_PIXBUF_PREFIX), NULL);
       g_free (tem);
     }
 }
 
-#endif  /* G_OS_WIN32 */
+#endif  /* GDK_PIXBUF_RELOCATABLE */
 
 static gchar *
 gdk_pixbuf_get_module_file (void)
@@ -496,7 +520,7 @@ gdk_pixbuf_io_init (void)
                                 /* Blank line marking the end of a module
                                  */
                         if (module && *p != '#') {
-#ifdef G_OS_WIN32
+#ifdef GDK_PIXBUF_RELOCATABLE
                                 correct_prefix (&module->module_path);
 #endif
                                 file_formats = g_slist_prepend (file_formats, module);
@@ -682,6 +706,18 @@ gdk_pixbuf_load_module_unlocked (GdkPixbufModule *image_module,
 
         try_module (pixdata,pixdata);
 
+#ifdef INCLUDE_gdiplus
+        try_module (ico,gdip_ico);
+        try_module (wmf,gdip_wmf);
+        try_module (emf,gdip_emf);
+        try_module (bmp,gdip_bmp);
+        try_module (gif,gdip_gif);
+        try_module (jpeg,gdip_jpeg);
+        try_module (tiff,gdip_tiff);
+#endif
+#ifdef INCLUDE_gdip_png
+        try_module (png,gdip_png);
+#endif
 #ifdef INCLUDE_png      
         try_module (png,png);
 #endif
@@ -732,18 +768,6 @@ gdk_pixbuf_load_module_unlocked (GdkPixbufModule *image_module,
 #endif
 #ifdef INCLUDE_qtif
         try_module (qtif,qtif);
-#endif
-#ifdef INCLUDE_gdiplus
-        try_module (ico,gdip_ico);
-        try_module (wmf,gdip_wmf);
-        try_module (emf,gdip_emf);
-        try_module (bmp,gdip_bmp);
-        try_module (gif,gdip_gif);
-        try_module (jpeg,gdip_jpeg);
-        try_module (tiff,gdip_tiff);
-#endif
-#ifdef INCLUDE_gdip_png
-        try_module (png,gdip_png);
 #endif
 
 #undef try_module
@@ -2357,7 +2381,9 @@ gdk_pixbuf_real_save_to_callback (GdkPixbuf         *pixbuf,
  * ]|
  *
  * Currently only few parameters exist. JPEG images can be saved with a
- * "quality" parameter; its value should be in the range [0,100].
+ * "quality" parameter; its value should be in the range [0,100]. JPEG
+ * and PNG density can be set by setting the "x-dpi" and "y-dpi" parameters
+ * to the appropriate values in dots per inch.
  *
  * Text chunks can be attached to PNG images by specifying parameters of
  * the form "tEXt::key", where key is an ASCII string of length 1-79.
@@ -2378,9 +2404,13 @@ gdk_pixbuf_real_save_to_callback (GdkPixbuf         *pixbuf,
  * gdk_pixbuf_save (pixbuf, handle, "png", &error, "icc-profile", contents_encode, NULL);
  * ]|
  *
- * TIFF images recognize a "compression" option which acceps an integer value.
- * Among the codecs are 1 None, 2 Huffman, 5 LZW, 7 JPEG and 8 Deflate, see
- * the libtiff documentation and tiff.h for all supported codec values.
+ * TIFF images recognize: (1) a "bits-per-sample" option (integer) which
+ * can be either 1 for saving bi-level CCITTFAX4 images, or 8 for saving
+ * 8-bits per sample; (2) a "compression" option (integer) which can be
+ * 1 for no compression, 2 for Huffman, 5 for LZW, 7 for JPEG and 8 for
+ * DEFLATE (see the libtiff documentation and tiff.h for all supported
+ * codec values); (3) an "icc-profile" option (zero-terminated string)
+ * containing a base64 encoded ICC color profile.
  *
  * ICO images can be saved in depth 16, 24, or 32, by using the "depth"
  * parameter. When the ICO saver is given "x_hot" and "y_hot" parameters,
@@ -2463,7 +2493,7 @@ gdk_pixbuf_save (GdkPixbuf  *pixbuf,
 #endif
 
 /**
- * gdk_pixbuf_savev:
+ * gdk_pixbuf_savev: (rename-to gdk_pixbuf_save)
  * @pixbuf: a #GdkPixbuf.
  * @filename: name of file to save.
  * @type: name of file format.
@@ -2624,7 +2654,7 @@ gdk_pixbuf_save_to_callback    (GdkPixbuf  *pixbuf,
 }
 
 /**
- * gdk_pixbuf_save_to_callbackv:
+ * gdk_pixbuf_save_to_callbackv: (rename-to gdk_pixbuf_save_to_callback)
  * @pixbuf: a #GdkPixbuf.
  * @save_func: (scope call): a function that is called to save each block of data that
  *   the save routine generates.
@@ -2760,7 +2790,7 @@ save_to_buffer_callback (const gchar *data,
 }
 
 /**
- * gdk_pixbuf_save_to_bufferv:
+ * gdk_pixbuf_save_to_bufferv: (rename-to gdk_pixbuf_save_to_buffer)
  * @pixbuf: a #GdkPixbuf.
  * @buffer: (array length=buffer_size) (out) (element-type guint8):
  *   location to receive a pointer to the new buffer.

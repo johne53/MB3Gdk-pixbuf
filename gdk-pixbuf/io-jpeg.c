@@ -519,6 +519,7 @@ gdk_pixbuf__jpeg_image_load (FILE *f, GError **error)
 {
 	gint   i;
 	char   otag_str[5];
+	char  *density_str;
 	GdkPixbuf * volatile pixbuf = NULL;
 	guchar *dptr;
 	guchar *lines[4]; /* Used to expand rows, via rec_outbuf_height, 
@@ -598,6 +599,27 @@ gdk_pixbuf__jpeg_image_load (FILE *f, GError **error)
                 }
                
 		goto out; 
+	}
+
+	switch (cinfo.density_unit) {
+	case 1:
+		/* Dots per inch (no conversion required) */
+		density_str = g_strdup_printf ("%d", cinfo.X_density);
+		gdk_pixbuf_set_option (pixbuf, "x-dpi", density_str);
+		g_free (density_str);
+		density_str = g_strdup_printf ("%d", cinfo.Y_density);
+		gdk_pixbuf_set_option (pixbuf, "y-dpi", density_str);
+		g_free (density_str);
+		break;
+	case 2:
+		/* Dots per cm - convert into dpi */
+		density_str = g_strdup_printf ("%d", DPCM_TO_DPI (cinfo.X_density));
+		gdk_pixbuf_set_option (pixbuf, "x-dpi", density_str);
+		g_free (density_str);
+		density_str = g_strdup_printf ("%d", DPCM_TO_DPI (cinfo.Y_density));
+		gdk_pixbuf_set_option (pixbuf, "y-dpi", density_str);
+		g_free (density_str);
+		break;
 	}
 
 	/* if orientation tag was found */
@@ -901,6 +923,7 @@ gdk_pixbuf__jpeg_image_load_increment (gpointer data,
 	gint             width, height;
 	char             otag_str[5];
 	gchar 		*icc_profile_base64;
+	char            *density_str;
 	JpegExifContext  exif_context = { 0, };
 	gboolean	 retval;
 
@@ -1037,6 +1060,27 @@ gdk_pixbuf__jpeg_image_load_increment (gpointer data,
                                                      _("Couldn't allocate memory for loading JPEG file"));
                                 retval = FALSE;
 				goto out;
+			}
+
+			switch (cinfo->density_unit) {
+			case 1:
+				/* Dots per inch (no conversion required) */
+				density_str = g_strdup_printf ("%d", cinfo->X_density);
+				gdk_pixbuf_set_option (context->pixbuf, "x-dpi", density_str);
+				g_free (density_str);
+				density_str = g_strdup_printf ("%d", cinfo->Y_density);
+				gdk_pixbuf_set_option (context->pixbuf, "y-dpi", density_str);
+				g_free (density_str);
+				break;
+			case 2:
+				/* Dots per cm - convert into dpi */
+				density_str = g_strdup_printf ("%d", DPCM_TO_DPI (cinfo->X_density));
+				gdk_pixbuf_set_option (context->pixbuf, "x-dpi", density_str);
+				g_free (density_str);
+				density_str = g_strdup_printf ("%d", DPCM_TO_DPI (cinfo->Y_density));
+				gdk_pixbuf_set_option (context->pixbuf, "y-dpi", density_str);
+				g_free (density_str);
+				break;
 			}
 		
 		        /* if orientation tag was found set an option to remember its value */
@@ -1226,6 +1270,8 @@ real_save_jpeg (GdkPixbuf          *pixbuf,
        int n_channels;
        struct error_handler_data jerr;
        ToFunctionDestinationManager to_callback_destmgr;
+       int x_density = 0;
+       int y_density = 0;
        gchar *icc_profile = NULL;
        gchar *data;
        gint retval = TRUE;
@@ -1264,6 +1310,48 @@ real_save_jpeg (GdkPixbuf          *pixbuf,
                                                     GDK_PIXBUF_ERROR_BAD_OPTION,
                                                     _("JPEG quality must be a value between 0 and 100; value '%d' is not allowed."),
                                                     quality);
+
+                                       retval = FALSE;
+                                       goto cleanup;
+                               }
+                       } else if (strcmp (*kiter, "x-dpi") == 0) {
+                               char *endptr = NULL;
+                               x_density = strtol (*viter, &endptr, 10);
+                               if (endptr == *viter)
+                                       x_density = -1;
+
+                               if (x_density <= 0 ||
+                                   x_density > 65535) {
+                                       /* This is a user-visible error;
+                                        * lets people skip the range-checking
+                                        * in their app.
+                                        */
+                                       g_set_error (error,
+                                                    GDK_PIXBUF_ERROR,
+                                                    GDK_PIXBUF_ERROR_BAD_OPTION,
+                                                    _("JPEG x-dpi must be a value between 1 and 65535; value '%s' is not allowed."),
+                                                    *viter);
+
+                                       retval = FALSE;
+                                       goto cleanup;
+                               }
+                       } else if (strcmp (*kiter, "y-dpi") == 0) {
+                               char *endptr = NULL;
+                               y_density = strtol (*viter, &endptr, 10);
+                               if (endptr == *viter)
+                                       y_density = -1;
+
+                               if (y_density <= 0 ||
+                                   y_density > 65535) {
+                                       /* This is a user-visible error;
+                                        * lets people skip the range-checking
+                                        * in their app.
+                                        */
+                                       g_set_error (error,
+                                                    GDK_PIXBUF_ERROR,
+                                                    GDK_PIXBUF_ERROR_BAD_OPTION,
+                                                    _("JPEG y-dpi must be a value between 1 and 65535; value '%s' is not allowed."),
+                                                    *viter);
 
                                        retval = FALSE;
                                        goto cleanup;
@@ -1354,6 +1442,13 @@ real_save_jpeg (GdkPixbuf          *pixbuf,
        /* set up jepg compression parameters */
        jpeg_set_defaults (&cinfo);
        jpeg_set_quality (&cinfo, quality, TRUE);
+
+       /* set density information */
+       if (x_density > 0 && y_density > 0) {
+           cinfo.density_unit = 1; /* Dots per inch */
+           cinfo.X_density = x_density;
+           cinfo.Y_density = y_density;
+       }
 
        jpeg_start_compress (&cinfo, TRUE);
 
@@ -1475,7 +1570,7 @@ MODULE_ENTRY (fill_info) (GdkPixbufFormat *info)
 
 	info->name = "jpeg";
 	info->signature = (GdkPixbufModulePattern *) signature;
-	info->description = N_("The JPEG image format");
+	info->description = NC_("image format", "JPEG");
 	info->mime_types = (gchar **) mime_types;
 	info->extensions = (gchar **) extensions;
 	info->flags = GDK_PIXBUF_FORMAT_WRITABLE | GDK_PIXBUF_FORMAT_THREADSAFE;

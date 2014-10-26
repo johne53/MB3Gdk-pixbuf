@@ -28,9 +28,11 @@ test_programs = 			\
 	pixbuf-randomly-modified	\
 	pixbuf-threads			\
 	pixbuf-icc			\
+	pixbuf-dpi			\
 	pixbuf-stream			\
 	pixbuf-resource			\
 	pixbuf-scale			\
+	pixbuf-short-gif-write		\
 	pixbuf-save			\
 	pixbuf-readonly-to-mutable	\
 	$(NULL)
@@ -41,10 +43,18 @@ dist_installed_test_data =		\
 	test-animation.ani		\
 	icc-profile.jpeg		\
 	icc-profile.png			\
+	dpi.jpeg				\
+	dpi.png					\
 	$(wildcard $(srcdir)/test-images/*)
 
 pixbuf_icc_SOURCES = 			\
 	pixbuf-icc.c			\
+	test-common.c			\
+	test-common.h			\
+	$(NULL)
+
+pixbuf_dpi_SOURCES = 			\
+	pixbuf-dpi.c			\
 	test-common.c			\
 	test-common.h			\
 	$(NULL)
@@ -78,6 +88,9 @@ pixbuf_save_SOURCES =			\
 	test-common.c			\
 	test-common.h			\
 	$(NULL)
+
+pixbuf_short_git_write_SOURCES =	\
+	pixbuf-short-gif-write.c
 
 pixbuf_readonly_to_mutable_SOURCES =	\
 	pixbuf-readonly-to-mutable.c	\

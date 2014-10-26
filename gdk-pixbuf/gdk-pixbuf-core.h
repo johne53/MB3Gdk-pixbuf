@@ -308,11 +308,15 @@ GdkPixbuf *gdk_pixbuf_new_from_bytes (GBytes *data,
 				      int rowstride);
  
 GdkPixbuf *gdk_pixbuf_new_from_xpm_data (const char **data);
+
+#ifndef GDK_PIXBUF_DISABLE_DEPRECATED
+G_DEPRECATED
 GdkPixbuf* gdk_pixbuf_new_from_inline	(gint          data_length,
 					 const guint8 *data,
 					 gboolean      copy_pixels,
 					 GError      **error);
-       
+#endif
+
 /* Mutations */
 void       gdk_pixbuf_fill              (GdkPixbuf    *pixbuf,
                                          guint32       pixel);
@@ -465,6 +469,7 @@ GdkPixbuf *gdk_pixbuf_apply_embedded_orientation (GdkPixbuf *src);
 
 const gchar * gdk_pixbuf_get_option (GdkPixbuf   *pixbuf,
                                               const gchar *key);
+GHashTable * gdk_pixbuf_get_options (GdkPixbuf   *pixbuf);
 
 
 G_END_DECLS

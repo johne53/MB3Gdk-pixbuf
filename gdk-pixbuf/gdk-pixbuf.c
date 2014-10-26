@@ -140,7 +140,9 @@ static void
 gdk_pixbuf_class_init (GdkPixbufClass *klass)
 {
         GObjectClass *object_class = G_OBJECT_CLASS (klass);
-        
+
+        _gdk_pixbuf_init_gettext ();
+
         object_class->finalize = gdk_pixbuf_finalize;
         object_class->set_property = gdk_pixbuf_set_property;
         object_class->get_property = gdk_pixbuf_get_property;
@@ -156,8 +158,8 @@ gdk_pixbuf_class_init (GdkPixbufClass *klass)
         g_object_class_install_property (object_class,
                                          PROP_N_CHANNELS,
                                          g_param_spec_int ("n-channels",
-                                                           P_("Number of Channels"),
-                                                           P_("The number of samples per pixel"),
+                                                           _("Number of Channels"),
+                                                           _("The number of samples per pixel"),
                                                            0,
                                                            G_MAXINT,
                                                            3,
@@ -166,8 +168,8 @@ gdk_pixbuf_class_init (GdkPixbufClass *klass)
         g_object_class_install_property (object_class,
                                          PROP_COLORSPACE,
                                          g_param_spec_enum ("colorspace",
-                                                            P_("Colorspace"),
-                                                            P_("The colorspace in which the samples are interpreted"),
+                                                            _("Colorspace"),
+                                                            _("The colorspace in which the samples are interpreted"),
                                                             GDK_TYPE_COLORSPACE,
                                                             GDK_COLORSPACE_RGB,
                                                             PIXBUF_PARAM_FLAGS));
@@ -175,8 +177,8 @@ gdk_pixbuf_class_init (GdkPixbufClass *klass)
         g_object_class_install_property (object_class,
                                          PROP_HAS_ALPHA,
                                          g_param_spec_boolean ("has-alpha",
-                                                               P_("Has Alpha"),
-                                                               P_("Whether the pixbuf has an alpha channel"),
+                                                               _("Has Alpha"),
+                                                               _("Whether the pixbuf has an alpha channel"),
                                                                FALSE,
                                                                PIXBUF_PARAM_FLAGS));
 
@@ -189,8 +191,8 @@ gdk_pixbuf_class_init (GdkPixbufClass *klass)
         g_object_class_install_property (object_class,
                                          PROP_BITS_PER_SAMPLE,
                                          g_param_spec_int ("bits-per-sample",
-                                                           P_("Bits per Sample"),
-                                                           P_("The number of bits per sample"),
+                                                           _("Bits per Sample"),
+                                                           _("The number of bits per sample"),
                                                            1,
                                                            16,
                                                            8,
@@ -199,8 +201,8 @@ gdk_pixbuf_class_init (GdkPixbufClass *klass)
         g_object_class_install_property (object_class,
                                          PROP_WIDTH,
                                          g_param_spec_int ("width",
-                                                           P_("Width"),
-                                                           P_("The number of columns of the pixbuf"),
+                                                           _("Width"),
+                                                           _("The number of columns of the pixbuf"),
                                                            1,
                                                            G_MAXINT,
                                                            1,
@@ -209,8 +211,8 @@ gdk_pixbuf_class_init (GdkPixbufClass *klass)
         g_object_class_install_property (object_class,
                                          PROP_HEIGHT,
                                          g_param_spec_int ("height",
-                                                           P_("Height"),
-                                                           P_("The number of rows of the pixbuf"),
+                                                           _("Height"),
+                                                           _("The number of rows of the pixbuf"),
                                                            1,
                                                            G_MAXINT,
                                                            1,
@@ -226,8 +228,8 @@ gdk_pixbuf_class_init (GdkPixbufClass *klass)
         g_object_class_install_property (object_class,
                                          PROP_ROWSTRIDE,
                                          g_param_spec_int ("rowstride",
-                                                           P_("Rowstride"),
-                                                           P_("The number of bytes between the start of a row and the start of the next row"),
+                                                           _("Rowstride"),
+                                                           _("The number of bytes between the start of a row and the start of the next row"),
                                                            1,
                                                            G_MAXINT,
                                                            1,
@@ -236,8 +238,8 @@ gdk_pixbuf_class_init (GdkPixbufClass *klass)
         g_object_class_install_property (object_class,
                                          PROP_PIXELS,
                                          g_param_spec_pointer ("pixels",
-                                                               P_("Pixels"),
-                                                               P_("A pointer to the pixel data of the pixbuf"),
+                                                               _("Pixels"),
+                                                               _("A pointer to the pixel data of the pixbuf"),
                                                                PIXBUF_PARAM_FLAGS));
 
         /**
@@ -251,8 +253,8 @@ gdk_pixbuf_class_init (GdkPixbufClass *klass)
         g_object_class_install_property (object_class,
                                          PROP_PIXEL_BYTES,
                                          g_param_spec_boxed ("pixel-bytes",
-                                                             P_("Pixel Bytes"),
-                                                             P_("Readonly pixel data"),
+                                                             _("Pixel Bytes"),
+                                                             _("Readonly pixel data"),
                                                              G_TYPE_BYTES,
                                                              PIXBUF_PARAM_FLAGS));
 }
@@ -647,7 +649,7 @@ gdk_pixbuf_get_pixels (const GdkPixbuf *pixbuf)
 }
 
 /**
- * gdk_pixbuf_get_pixels_with_length:
+ * gdk_pixbuf_get_pixels_with_length: (rename-to gdk_pixbuf_get_pixels)
  * @pixbuf: A pixbuf.
  * @length: (out): The length of the binary data.
  *
@@ -659,8 +661,6 @@ gdk_pixbuf_get_pixels (const GdkPixbuf *pixbuf)
  *
  * This function will cause an implicit copy of the pixbuf data if the
  * pixbuf was created from read-only data.
- *
- * Rename to: gdk_pixbuf_get_pixels
  *
  * Since: 2.26
  */
@@ -837,6 +837,7 @@ gdk_pixbuf_fill (GdkPixbuf *pixbuf,
         guint w, h;
 
         g_return_if_fail (GDK_IS_PIXBUF (pixbuf));
+        g_return_if_fail (pixbuf->pixels || pixbuf->bytes);
 
         if (pixbuf->width == 0 || pixbuf->height == 0)
                 return;
@@ -897,7 +898,10 @@ gdk_pixbuf_fill (GdkPixbuf *pixbuf,
  * options for cursor definitions. The PNG loader provides the tEXt ancillary
  * chunk key/value pairs as options. Since 2.12, the TIFF and JPEG loaders
  * return an "orientation" option string that corresponds to the embedded 
- * TIFF/Exif orientation tag (if present).
+ * TIFF/Exif orientation tag (if present). Since 2.32, the TIFF loader sets
+ * the "multipage" option string to "yes" when a multi-page TIFF is loaded.
+ * Since 2.32 the JPEG and PNG loaders set "x-dpi" and "y-dpi" if the file
+ * contains image density information in dots per inch.
  * 
  * Return value: the value associated with @key. This is a nul-terminated 
  * string that should not be freed or %NULL if @key was not found.
@@ -922,6 +926,42 @@ gdk_pixbuf_get_option (GdkPixbuf   *pixbuf,
         }
         
         return NULL;
+}
+
+/**
+ * gdk_pixbuf_get_options:
+ * @pixbuf: a #GdkPixbuf
+ *
+ * Returns a #GHashTable with a list of all the options that may have been
+ * attached to the @pixbuf when it was loaded, or that may have been
+ * attached by another function using gdk_pixbuf_set_option().
+ *
+ * See gdk_pixbuf_get_option() for more details.
+ *
+ * Return value: (transfer container) (element-type utf8 utf8): a #GHashTable of key/values
+ *
+ * Since: 2.32
+ **/
+GHashTable *
+gdk_pixbuf_get_options (GdkPixbuf *pixbuf)
+{
+        GHashTable *ht;
+        gchar **options;
+
+        g_return_val_if_fail (GDK_IS_PIXBUF (pixbuf), NULL);
+
+        ht = g_hash_table_new (g_str_hash, g_str_equal);
+
+        options = g_object_get_qdata (G_OBJECT (pixbuf),
+                                      g_quark_from_static_string ("gdk_pixbuf_options"));
+        if (options) {
+                gint i;
+
+                for (i = 0; options[2*i]; i++)
+                        g_hash_table_insert (ht, options[2*i], options[2*i+1]);
+        }
+
+        return ht;
 }
 
 /**
