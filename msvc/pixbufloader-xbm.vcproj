@@ -68,7 +68,7 @@
 			/>
 			<Tool
 				Name="VCLinkerTool"
-				AdditionalDependencies="$(DllPrefix)gdk-pixbuf32$(DllSuffix)D.lib $(DllPrefix)gobject32$(GlibDllSuffix)D.lib $(DllPrefix)glib32$(GlibDllSuffix)D.lib"
+				AdditionalDependencies="$(DllPrefix)gdk-pixbuf32$(DllSuffix)D.lib $(DllPrefix)gobject32$(GlibDllSuffix)D.lib $(DllPrefix)glib32$(GlibDllSuffix)D.lib intlD.lib"
 				OutputFile="$(OutDir)\$(DllPrefix)$(ProjectName)32D.dll"
 				AdditionalLibraryDirectories="&quot;$(ProjectDir)$(ConfigurationName)\lib&quot;;&quot;$(GenericWin32LibraryFolder)&quot;"
 				ModuleDefinitionFile="$(ProjectDir)\$(ConfigurationName)\bin\loaders\pixbuf-loaders.def"
@@ -159,7 +159,7 @@
 			/>
 			<Tool
 				Name="VCLinkerTool"
-				AdditionalDependencies="$(DllPrefix)gdk-pixbuf32$(DllSuffix).lib $(DllPrefix)gobject32$(GlibDllSuffix).lib $(DllPrefix)glib32$(GlibDllSuffix).lib"
+				AdditionalDependencies="$(DllPrefix)gdk-pixbuf32$(DllSuffix).lib $(DllPrefix)gobject32$(GlibDllSuffix).lib $(DllPrefix)glib32$(GlibDllSuffix).lib intl.lib"
 				OutputFile="$(OutDir)\$(DllPrefix)$(ProjectName)32.dll"
 				AdditionalLibraryDirectories="&quot;$(ProjectDir)$(ConfigurationName)\lib&quot;;&quot;$(GenericWin32LibraryFolder)&quot;"
 				ModuleDefinitionFile="$(ProjectDir)\$(ConfigurationName)\bin\loaders\pixbuf-loaders.def"
@@ -248,7 +248,7 @@
 			/>
 			<Tool
 				Name="VCLinkerTool"
-				AdditionalDependencies="$(DllPrefix)gdk-pixbuf32$(DllSuffix)RDC.lib $(DllPrefix)gobject32$(GlibDllSuffix)RDC.lib $(DllPrefix)glib32$(GlibDllSuffix)RDC.lib"
+				AdditionalDependencies="$(DllPrefix)gdk-pixbuf32$(DllSuffix)RDC.lib $(DllPrefix)gobject32$(GlibDllSuffix)RDC.lib $(DllPrefix)glib32$(GlibDllSuffix)RDC.lib intlRDC.lib"
 				OutputFile="$(OutDir)\$(DllPrefix)$(ProjectName)32RDC.dll"
 				AdditionalLibraryDirectories="&quot;$(ProjectDir)$(ConfigurationName)\lib&quot;;&quot;$(GenericWin32LibraryFolder)&quot;"
 				ModuleDefinitionFile="$(ProjectDir)\$(ConfigurationName)\bin\loaders\pixbuf-loaders.def"
