@@ -15,8 +15,8 @@ AC_PREREQ([2.63])
 
 m4_define([gdk_pixbuf_major_version], [2])
 m4_define([gdk_pixbuf_minor_version], [31])
-m4_define([gdk_pixbuf_micro_version], [2])
-m4_define([gdk_pixbuf_interface_age], [2])
+m4_define([gdk_pixbuf_micro_version], [3])
+m4_define([gdk_pixbuf_interface_age], [3])
 m4_define([gdk_pixbuf_binary_age],
           [m4_eval(100 * gdk_pixbuf_minor_version + gdk_pixbuf_micro_version)])
 m4_define([gdk_pixbuf_version],
@@ -904,22 +904,7 @@ fi
 
 AM_CONDITIONAL(USE_MMX, test x$use_mmx_asm = xyes)
 
-REBUILD_PNGS=
-if test -z "$LIBPNG" && test x"$os_win32" = xno -o x$with_gdiplus = xno; then
-  REBUILD_PNGS=#
-fi
-
-dnl Look for a host system's gdk-pixbuf-csource if we are cross-compiling
-
 AM_CONDITIONAL(CROSS_COMPILING, test $cross_compiling = yes)
-
-if test $cross_compiling = yes; then
-  AC_PATH_PROG(GDK_PIXBUF_CSOURCE, gdk-pixbuf-csource, no)
-  AC_PATH_PROG(GTK_UPDATE_ICON_CACHE, gtk-update-icon-cache, no)
-  if test x$GTK_UPDATE_ICON_CACHE = xno; then
-    REBUILD_PNGS=#
-  fi
-fi
 
 GDK_PIXBUF_PACKAGES="gmodule-no-export-2.0 gobject-2.0 gio-2.0"
 GDK_PIXBUF_EXTRA_LIBS="$STATIC_LIB_DEPS $MATH_LIB $MEDIA_LIB"

@@ -28,31 +28,9 @@
   g_strcmp0 (gdk_pixbuf_get_option (p1, key), gdk_pixbuf_get_option (p2, key))
 
 static gboolean
-pixdata_equal (GdkPixbuf *p1, GdkPixbuf *p2)
-{
-  if (gdk_pixbuf_get_colorspace (p1) != gdk_pixbuf_get_colorspace (p2))
-    return FALSE;
-  if (gdk_pixbuf_get_n_channels (p1) != gdk_pixbuf_get_n_channels (p2))
-    return FALSE;
-  if (gdk_pixbuf_get_bits_per_sample (p1) != gdk_pixbuf_get_bits_per_sample (p2))
-    return FALSE;
-  if (gdk_pixbuf_get_width (p1) != gdk_pixbuf_get_width (p2))
-    return FALSE;
-  if (gdk_pixbuf_get_height (p1) != gdk_pixbuf_get_height (p2))
-    return FALSE;
-  if (gdk_pixbuf_get_rowstride (p1) != gdk_pixbuf_get_rowstride (p2))
-    return FALSE;
-  if (memcmp (gdk_pixbuf_get_pixels (p1), gdk_pixbuf_get_pixels (p2),
-          gdk_pixbuf_get_byte_length (p1)) != 0)
-    return FALSE;
-
-  return TRUE;
-}
-
-static gboolean
 pixbuf_equal (GdkPixbuf *p1, GdkPixbuf *p2)
 {
-  if (!pixdata_equal (p1, p2))
+  if (!pixdata_equal (p1, p2, NULL))
     return FALSE;
   if (compare_option (p1, p2, "Title") != 0)
     return FALSE;
@@ -94,7 +72,7 @@ test_resource (void)
   
   pixbuf = gdk_pixbuf_new_from_resource ("/test/resource/icc-profile.pixdata", &error);
   g_assert_no_error (error);
-  g_assert (pixdata_equal (pixbuf, ref));
+  g_assert (pixdata_equal (pixbuf, ref, NULL));
   g_object_unref (pixbuf);
 
   pixbuf = gdk_pixbuf_new_from_resource ("/no/such/resource", &error);
