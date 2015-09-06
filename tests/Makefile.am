@@ -18,9 +18,14 @@ LDADD = \
 
 noinst_PROGRAMS += 			\
 	pixbuf-read			\
-	pixbuf-lowmem			\
 	pixbuf-random			\
 	$(NULL)
+
+if OS_LINUX
+noinst_PROGRAMS += 			\
+	pixbuf-lowmem			\
+	$(NULL)
+endif
 
 test_programs = 			\
 	animation			\
@@ -53,6 +58,9 @@ dist_installed_test_data =		\
 	premature-end.jpg		\
 	bug725582-testrotate.jpg	\
 	bug725582-testrotate.png	\
+	cve-2015-4491.bmp		\
+	large.png			\
+	large.jpg			\
 	$(wildcard $(srcdir)/test-images/*)
 
 cve_2015_4491_SOURCES =			\

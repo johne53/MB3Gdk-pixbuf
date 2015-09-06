@@ -214,6 +214,43 @@ DllMain (HINSTANCE hinstDLL,
 #endif
 
 
+#ifdef GDK_PIXBUF_RELOCATABLE
+
+gchar *
+gdk_pixbuf_get_toplevel (void)
+{
+  static gchar *toplevel = NULL;
+
+  if (toplevel == NULL) {
+#if defined(G_OS_WIN32)
+    toplevel = g_win32_get_package_installation_directory_of_module (gdk_pixbuf_dll);
+#elif defined(OS_DARWIN)
+    char pathbuf[PATH_MAX + 1];
+    uint32_t  bufsize = sizeof(pathbuf);
+    gchar *bin_dir;
+
+    _NSGetExecutablePath(pathbuf, &bufsize);
+    bin_dir = g_dirname(pathbuf);
+    toplevel = g_build_path (G_DIR_SEPARATOR_S, bin_dir, "..", NULL);
+    g_free (bin_dir);
+#elif defined (OS_LINUX)
+    gchar *exe_path, *bin_dir;
+
+    exe_path = g_file_read_link ("/proc/self/exe", NULL);
+    bin_dir = g_dirname(exe_path);
+    toplevel = g_build_path (G_DIR_SEPARATOR_S, bin_dir, "..", NULL);
+    g_free (exe_path);
+    g_free (bin_dir);
+#else
+#error "Relocations not supported for this platform"
+#endif
+  }
+  return toplevel;
+}
+
+#endif  /* GDK_PIXBUF_RELOCATABLE */
+
+
 #ifdef USE_GMODULE 
 
 static gboolean
@@ -296,38 +333,6 @@ skip_space (const char **pos)
 }
 
 #ifdef GDK_PIXBUF_RELOCATABLE
-
-gchar *
-gdk_pixbuf_get_toplevel (void)
-{
-  static gchar *toplevel = NULL;
-
-  if (toplevel == NULL) {
-#if defined(G_OS_WIN32)
-    toplevel = g_win32_get_package_installation_directory_of_module (gdk_pixbuf_dll);
-#elif defined(OS_DARWIN)
-    char pathbuf[PATH_MAX + 1];
-    uint32_t  bufsize = sizeof(pathbuf);
-    gchar *bin_dir;
-
-    _NSGetExecutablePath(pathbuf, &bufsize);
-    bin_dir = g_dirname(pathbuf);
-    toplevel = g_build_path (G_DIR_SEPARATOR_S, bin_dir, "..", NULL);
-    g_free (bin_dir);
-#elif defined (OS_LINUX)
-    gchar *exe_path, *bin_dir;
-
-    exe_path = g_file_read_link ("/proc/self/exe", NULL);
-    bin_dir = g_dirname(exe_path);
-    toplevel = g_build_path (G_DIR_SEPARATOR_S, bin_dir, "..", NULL);
-    g_free (exe_path);
-    g_free (bin_dir);
-#else
-#error "Relocations not supported for this platform"
-#endif
-  }
-  return toplevel;
-}
 
 static char *
 get_libdir (void)
@@ -1685,8 +1690,10 @@ _gdk_pixbuf_new_from_resource_try_mmap (const char *resource_path)
 	gsize data_size;
 	GBytes *bytes;
 
+G_GNUC_BEGIN_IGNORE_DEPRECATIONS
 	/* We specialize uncompressed GdkPixdata files, making these a reference to the
-	   compiled-in resource data */
+	 * compiled-in resource data
+         */
 	if (g_resources_get_info  (resource_path, 0, &data_size, &flags, NULL) &&
 	    (flags & G_RESOURCE_FLAGS_COMPRESSED) == 0 &&
 	    data_size >= GDK_PIXDATA_HEADER_LENGTH &&
@@ -1710,6 +1717,7 @@ _gdk_pixbuf_new_from_resource_try_mmap (const char *resource_path)
 			g_bytes_unref (bytes);
 		}
 	}
+G_GNUC_END_IGNORE_DEPRECATIONS
 
         return NULL;
 }
@@ -1732,8 +1740,8 @@ _gdk_pixbuf_new_from_resource_try_mmap (const char *resource_path)
  * Since: 2.26
  **/
 GdkPixbuf *
-gdk_pixbuf_new_from_resource (const char *resource_path,
-			      GError    **error)
+gdk_pixbuf_new_from_resource (const gchar  *resource_path,
+			      GError      **error)
 {
 	GInputStream *stream;
 	GdkPixbuf *pixbuf;
