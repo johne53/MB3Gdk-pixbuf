@@ -20,17 +20,7 @@ mkdir $(CopyDir)\lib
 copy $(BinDir)\gdk_pixbuf-$(ApiVersion).lib $(CopyDir)\lib
 
 mkdir $(CopyDir)\include\gdk-pixbuf-$(ApiVersion)\gdk-pixbuf
-copy ..\..\..\gdk-pixbuf\gdk-pixbuf-animation.h $(CopyDir)\include\gdk-pixbuf-$(ApiVersion)\gdk-pixbuf
-copy ..\..\..\gdk-pixbuf\gdk-pixbuf-core.h $(CopyDir)\include\gdk-pixbuf-$(ApiVersion)\gdk-pixbuf
-copy ..\..\..\gdk-pixbuf\gdk-pixbuf-enum-types.h $(CopyDir)\include\gdk-pixbuf-$(ApiVersion)\gdk-pixbuf
-copy ..\..\..\gdk-pixbuf\gdk-pixbuf-features.h $(CopyDir)\include\gdk-pixbuf-$(ApiVersion)\gdk-pixbuf
-copy ..\..\..\gdk-pixbuf\gdk-pixbuf-io.h $(CopyDir)\include\gdk-pixbuf-$(ApiVersion)\gdk-pixbuf
-copy ..\..\..\gdk-pixbuf\gdk-pixbuf-loader.h $(CopyDir)\include\gdk-pixbuf-$(ApiVersion)\gdk-pixbuf
-copy ..\..\..\gdk-pixbuf\gdk-pixbuf-marshal.h $(CopyDir)\include\gdk-pixbuf-$(ApiVersion)\gdk-pixbuf
-copy ..\..\..\gdk-pixbuf\gdk-pixbuf-simple-anim.h $(CopyDir)\include\gdk-pixbuf-$(ApiVersion)\gdk-pixbuf
-copy ..\..\..\gdk-pixbuf\gdk-pixbuf-transform.h $(CopyDir)\include\gdk-pixbuf-$(ApiVersion)\gdk-pixbuf
-copy ..\..\..\gdk-pixbuf\gdk-pixbuf.h $(CopyDir)\include\gdk-pixbuf-$(ApiVersion)\gdk-pixbuf
-copy ..\..\..\gdk-pixbuf\gdk-pixdata.h $(CopyDir)\include\gdk-pixbuf-$(ApiVersion)\gdk-pixbuf
+#include "gdk-pixbuf.vs10.headers"
     </GdkPixbufDoInstall>
   </PropertyGroup>
   <PropertyGroup>
