@@ -19,13 +19,8 @@ LDADD = \
 noinst_PROGRAMS += 			\
 	pixbuf-read			\
 	pixbuf-random			\
-	$(NULL)
-
-if OS_LINUX
-noinst_PROGRAMS += 			\
 	pixbuf-lowmem			\
 	$(NULL)
-endif
 
 test_programs = 			\
 	animation			\
@@ -48,6 +43,7 @@ test_programs = 			\
 dist_installed_test_data =		\
 	test-image.png			\
 	test-animation.gif		\
+	1_partyanimsm2.gif		\
 	test-animation.ani		\
 	icc-profile.jpeg		\
 	icc-profile.png			\
@@ -65,6 +61,8 @@ dist_installed_test_data =		\
 
 cve_2015_4491_SOURCES =			\
 	cve-2015-4491.c			\
+	test-common.c			\
+	test-common.h			\
 	resources.h			\
 	resources.c			\
 	$(NULL)

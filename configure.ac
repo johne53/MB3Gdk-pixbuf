@@ -14,9 +14,9 @@ AC_PREREQ([2.63])
 #   gdk_pixbuf_binary_age = 0;
 
 m4_define([gdk_pixbuf_major_version], [2])
-m4_define([gdk_pixbuf_minor_version], [31])
-m4_define([gdk_pixbuf_micro_version], [7])
-m4_define([gdk_pixbuf_interface_age], [7])
+m4_define([gdk_pixbuf_minor_version], [33])
+m4_define([gdk_pixbuf_micro_version], [0])
+m4_define([gdk_pixbuf_interface_age], [1])
 m4_define([gdk_pixbuf_binary_age],
           [m4_eval(100 * gdk_pixbuf_minor_version + gdk_pixbuf_micro_version)])
 m4_define([gdk_pixbuf_version],
@@ -679,7 +679,7 @@ fi
 # because some important apps like GIMP need to read and write
 # arbitrary tEXt chunks which doesn't seem to be possible through GDI+
 
-all_loaders="ani,icns,pcx,ras,tga,png,pnm,wbmp,xbm,xpm,qtif"
+all_loaders="ani,icns,tga,png,pnm,xbm,xpm,qtif"
 if test x$with_libjasper = xyes; then
   all_loaders="$all_loaders,jasper"
 fi
@@ -736,18 +736,15 @@ AC_SUBST(INCLUDED_LOADER_DEFINE)
 
 AM_CONDITIONAL(INCLUDE_PNG, [test x"$INCLUDE_png" = xyes])
 AM_CONDITIONAL(INCLUDE_BMP, [test x"$INCLUDE_bmp" = xyes])
-AM_CONDITIONAL(INCLUDE_WBMP, [test x"$INCLUDE_wbmp" = xyes])
 AM_CONDITIONAL(INCLUDE_GIF, [test x"$INCLUDE_gif" = xyes])
 AM_CONDITIONAL(INCLUDE_ICO, [test x"$INCLUDE_ico" = xyes])
 AM_CONDITIONAL(INCLUDE_ANI, [test x"$INCLUDE_ani" = xyes])
 AM_CONDITIONAL(INCLUDE_JPEG, [test x"$INCLUDE_jpeg" = xyes])
 AM_CONDITIONAL(INCLUDE_PNM, [test x"$INCLUDE_pnm" = xyes])
-AM_CONDITIONAL(INCLUDE_RAS, [test x"$INCLUDE_ras" = xyes])
 AM_CONDITIONAL(INCLUDE_TIFF, [test x"$INCLUDE_tiff" = xyes])
 AM_CONDITIONAL(INCLUDE_XPM, [test x"$INCLUDE_xpm" = xyes])
 AM_CONDITIONAL(INCLUDE_XBM, [test x"$INCLUDE_xbm" = xyes])
 AM_CONDITIONAL(INCLUDE_TGA, [test x"$INCLUDE_tga" = xyes])
-AM_CONDITIONAL(INCLUDE_PCX, [test x"$INCLUDE_pcx" = xyes])
 AM_CONDITIONAL(INCLUDE_ICNS, [test x"$INCLUDE_icns" = xyes])
 AM_CONDITIONAL(INCLUDE_JASPER, [test x"$INCLUDE_jasper" = xyes])
 AM_CONDITIONAL(INCLUDE_QTIF, [test x"$INCLUDE_qtif" = xyes])
@@ -1058,18 +1055,17 @@ AC_SUBST(GENHTML)
 # Enable replacing the build-time prefix in the loaders
 # cache with the installation prefix on this machine
 # for relocatable packages such as Windows and OS X
-# applicationsapplications and linux bundles
+# applications and linux bundles
 #######################################################
 
-enable_relocations=no
-case $host in
-  *-*-mingw*)
-    enable_relocations=yes
-    ;;
-  *-*-darwin*)
-    enable_relocations=yes
-    ;;
-esac
+AC_MSG_CHECKING([whether to build with application bundle relocation support])
+AC_ARG_ENABLE([relocations],
+              AS_HELP_STRING([--enable-relocations],
+                             [Whether to build with application bundle relocation support]),
+              [],
+              [enable_relocations=no])
+
+AC_MSG_RESULT([$enable_relocations])
 
 if test "x$enable_relocations" = "xyes"; then
   AC_DEFINE(GDK_PIXBUF_RELOCATABLE, 1,
