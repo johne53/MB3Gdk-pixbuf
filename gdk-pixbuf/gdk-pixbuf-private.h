@@ -47,7 +47,7 @@ typedef struct _GdkPixbufClass GdkPixbufClass;
 #define GDK_PIXBUF_GET_CLASS(obj)    (G_TYPE_INSTANCE_GET_CLASS ((obj), GDK_TYPE_PIXBUF, GdkPixbufClass))
 
 /* Helper macros to convert between density units */
-#ifdef _MSC_VER
+#ifdef _MSC_VER /* Added by JE - 8-10-2015 */
 #define round(value) floor((value) + 0.5)
 #endif
 #define DPI_TO_DPM(value) ((int) round ((value) * 1000 / 25.4))
