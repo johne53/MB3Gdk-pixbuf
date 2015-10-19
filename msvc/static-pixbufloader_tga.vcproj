@@ -249,6 +249,10 @@
 			Filter="cpp;c;cxx;rc;def;r;odl;idl;hpj;bat;for;f90"
 			>
 			<File
+				RelativePath="..\gdk-pixbuf\gdk-pixbuf-buffer-queue.c"
+				>
+			</File>
+			<File
 				RelativePath="..\gdk-pixbuf\io-tga.c"
 				>
 			</File>
@@ -257,6 +261,10 @@
 			Name="Header Files"
 			Filter="h;hpp;hxx;hm;inl;fi;fd"
 			>
+			<File
+				RelativePath="..\gdk-pixbuf\gdk-pixbuf-buffer-queue-private.h"
+				>
+			</File>
 		</Filter>
 	</Files>
 	<Globals>
