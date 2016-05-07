@@ -15,8 +15,8 @@ AC_PREREQ([2.63])
 
 m4_define([gdk_pixbuf_major_version], [2])
 m4_define([gdk_pixbuf_minor_version], [35])
-m4_define([gdk_pixbuf_micro_version], [0])
-m4_define([gdk_pixbuf_interface_age], [0])
+m4_define([gdk_pixbuf_micro_version], [1])
+m4_define([gdk_pixbuf_interface_age], [1])
 m4_define([gdk_pixbuf_binary_age],
           [m4_eval(100 * gdk_pixbuf_minor_version + gdk_pixbuf_micro_version)])
 m4_define([gdk_pixbuf_version],
@@ -1076,7 +1076,9 @@ gdk-pixbuf/pixops/Makefile
 build/Makefile
 build/win32/Makefile
 build/win32/vs9/Makefile
+build/win32/vs9/gdk-pixbuf-version-paths.vsprops
 build/win32/vs10/Makefile
+build/win32/vs10/gdk-pixbuf-version-paths.props
 build/win32/vs11/Makefile
 build/win32/vs12/Makefile
 build/win32/vs14/Makefile
