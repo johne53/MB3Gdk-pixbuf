@@ -68,7 +68,6 @@
 			/>
 			<Tool
 				Name="VCPreLinkEventTool"
-				Description=""
 				CommandLine=""
 			/>
 			<Tool
@@ -164,7 +163,6 @@
 			/>
 			<Tool
 				Name="VCPreLinkEventTool"
-				Description=""
 				CommandLine=""
 			/>
 			<Tool
@@ -259,7 +257,6 @@
 			/>
 			<Tool
 				Name="VCPreLinkEventTool"
-				Description=""
 				CommandLine=""
 			/>
 			<Tool
@@ -367,10 +364,6 @@
 			Name="Header Files"
 			Filter="h;hpp;hxx;hm;inl;fi;fd"
 			>
-			<File
-				RelativePath="$(GdkPixbufBuildRootFolder)\gdk-pixbuf\gdk-pixbuf-i18n.h"
-				>
-			</File>
 			<File
 				RelativePath="$(GdkPixbufBuildRootFolder)\gdk-pixbuf\gdk-pixbuf-marshal.h"
 				>
