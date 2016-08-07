@@ -118,7 +118,9 @@ gdk_pixbuf_get_rowstride
 gdk_pixbuf_get_byte_length
 gdk_pixbuf_get_option
 gdk_pixbuf_set_option
+gdk_pixbuf_remove_option
 gdk_pixbuf_get_options
+gdk_pixbuf_copy_options
 gdk_pixbuf_read_pixels
 
 <SUBSECTION Standard>
@@ -329,6 +331,7 @@ gdk_pixbuf_format_get_name
 gdk_pixbuf_format_get_description
 gdk_pixbuf_format_get_mime_types
 gdk_pixbuf_format_get_extensions
+gdk_pixbuf_format_is_save_option_supported
 gdk_pixbuf_format_is_writable
 gdk_pixbuf_format_is_scalable
 gdk_pixbuf_format_is_disabled

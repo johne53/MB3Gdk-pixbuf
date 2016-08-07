@@ -254,6 +254,7 @@ static gboolean DecodeHeader(unsigned char *BFH, unsigned char *BIH,
                              GError **error)
 {
 	gint clrUsed;
+	guint bytesPerPixel;
 
 	/* First check for the two first bytes content. A sane
 	   BMP file must start with bytes 0x42 0x4D.  */
@@ -380,15 +381,17 @@ static gboolean DecodeHeader(unsigned char *BFH, unsigned char *BIH,
 		return FALSE;
 	}
 
-	if (State->Type == 32)
-		State->LineWidth = State->Header.width * 4;
-	else if (State->Type == 24)
-		State->LineWidth = State->Header.width * 3;
-	else if (State->Type == 16)
-		State->LineWidth = State->Header.width * 2;
-	else if (State->Type == 8)
-		State->LineWidth = State->Header.width * 1;
-	else if (State->Type == 4)
+	if ((State->Type >= 8) && (State->Type <= 32) && (State->Type % 8 == 0)) {
+		bytesPerPixel = State->Type / 8;
+		State->LineWidth = State->Header.width * bytesPerPixel;
+		if (State->Header.width != State->LineWidth / bytesPerPixel) {
+			g_set_error_literal (error,
+					     GDK_PIXBUF_ERROR,
+					     GDK_PIXBUF_ERROR_CORRUPT_IMAGE,
+					     _("BMP image width too large"));
+			return FALSE;
+		}
+	} else if (State->Type == 4)
 		State->LineWidth = (State->Header.width + 1) / 2;
 	else if (State->Type == 1) {
 		State->LineWidth = State->Header.width / 8;
@@ -518,12 +521,16 @@ static gboolean DecodeColormap (guchar *buff,
 {
 	gint i;
 	gint samples;
+	guint newbuffersize;
 
 	g_assert (State->read_state == READ_STATE_PALETTE);
 
 	samples = (State->Header.size == 12 ? 3 : 4);
-	if (State->BufferSize < State->Header.n_colors * samples) {
-		State->BufferSize = State->Header.n_colors * samples;
+	newbuffersize = State->Header.n_colors * samples;
+	if (newbuffersize / samples != State->Header.n_colors) /* Integer overflow check */
+		return FALSE;
+	if (State->BufferSize < newbuffersize) {
+		State->BufferSize = newbuffersize;
 		if (!grow_buffer (State, error))
 			return FALSE;
 		return TRUE;
@@ -1247,8 +1254,13 @@ gdk_pixbuf__bmp_image_load_increment(gpointer data,
 			break;
 
 		case READ_STATE_PALETTE:
-			if (!DecodeColormap (context->buff, context, error))
+			if (!DecodeColormap (context->buff, context, error)) {
+				g_set_error (error,
+					     GDK_PIXBUF_ERROR,
+					     GDK_PIXBUF_ERROR_CORRUPT_IMAGE,
+					     _("Error while decoding colormap"));
 				return FALSE;
+			}
 			break;
 
 		case READ_STATE_BITMASKS:
