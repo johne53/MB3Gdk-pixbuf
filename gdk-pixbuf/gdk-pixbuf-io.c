@@ -424,9 +424,6 @@ gdk_pixbuf_io_init (void)
         else                                                            \
                 g_free (builtin_module)
 
-	/* Always include GdkPixdata format */
-        load_one_builtin_module (pixdata);
-
 #ifdef INCLUDE_ani
         load_one_builtin_module (ani);
 #endif
@@ -650,7 +647,6 @@ gdk_pixbuf_io_init (void)
   extern void _gdk_pixbuf__##type##_fill_info   (GdkPixbufFormat *info);   \
   extern void _gdk_pixbuf__##type##_fill_vtable (GdkPixbufModule *module)
 
-module (pixdata);
 module (png);
 module (jpeg);
 module (gif);
@@ -695,8 +691,6 @@ gdk_pixbuf_load_module_unlocked (GdkPixbufModule *image_module,
                 fill_info = _gdk_pixbuf__##id##_fill_info;              \
                 fill_vtable = _gdk_pixbuf__##id##_fill_vtable;  \
         }
-
-        try_module (pixdata,pixdata);
 
 #ifdef INCLUDE_gdiplus
         try_module (ico,gdip_ico);
@@ -1660,19 +1654,18 @@ gdk_pixbuf_new_from_stream (GInputStream  *stream,
 }
 
 GdkPixbuf *
-_gdk_pixbuf_new_from_resource_try_mmap (const char *resource_path)
+_gdk_pixbuf_new_from_resource_try_pixdata (const char *resource_path)
 {
 	guint32 flags;
 	gsize data_size;
 	GBytes *bytes;
 
 G_GNUC_BEGIN_IGNORE_DEPRECATIONS
-	/* We specialize uncompressed GdkPixdata files, making these a reference to the
-	 * compiled-in resource data
+	/* We specialize GdkPixdata files, making these a reference to the
+	 * compiled-in resource data, whether uncompressed and mmap'ed, or
+	 * compressed, and uncompressed on-the-fly.
          */
 	if (g_resources_get_info  (resource_path, 0, &data_size, &flags, NULL) &&
-	    (flags & G_RESOURCE_FLAGS_COMPRESSED) == 0 &&
-	    data_size >= GDK_PIXDATA_HEADER_LENGTH &&
 	    (bytes = g_resources_lookup_data (resource_path, 0, NULL)) != NULL) {
 		GdkPixbuf*pixbuf = NULL;
 		const guint8 *stream = g_bytes_get_data (bytes, NULL);
@@ -1722,7 +1715,7 @@ gdk_pixbuf_new_from_resource (const gchar  *resource_path,
 	GInputStream *stream;
 	GdkPixbuf *pixbuf;
 
-        pixbuf = _gdk_pixbuf_new_from_resource_try_mmap (resource_path);
+        pixbuf = _gdk_pixbuf_new_from_resource_try_pixdata (resource_path);
         if (pixbuf)
                 return pixbuf;
 

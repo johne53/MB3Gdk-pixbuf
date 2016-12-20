@@ -15,7 +15,7 @@ AC_PREREQ([2.63])
 
 m4_define([gdk_pixbuf_major_version], [2])
 m4_define([gdk_pixbuf_minor_version], [36])
-m4_define([gdk_pixbuf_micro_version], [0])
+m4_define([gdk_pixbuf_micro_version], [1])
 m4_define([gdk_pixbuf_interface_age], [0])
 m4_define([gdk_pixbuf_binary_age],
           [m4_eval(100 * gdk_pixbuf_minor_version + gdk_pixbuf_micro_version)])
@@ -1121,6 +1121,7 @@ docs/reference/gdk-pixbuf/Makefile
 docs/reference/gdk-pixbuf/version.xml
 po/Makefile.in
 tests/Makefile
+thumbnailer/Makefile
 contrib/Makefile
 contrib/gdk-pixbuf-xlib/Makefile
 contrib/gdk-pixbuf-xlib/gdk-pixbuf-xlib-2.0.pc
