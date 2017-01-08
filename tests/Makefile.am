@@ -20,6 +20,7 @@ noinst_PROGRAMS += 			\
 	pixbuf-read			\
 	pixbuf-random			\
 	pixbuf-lowmem			\
+	pixbuf-save-ref			\
 	$(NULL)
 
 test_programs = 			\
@@ -41,6 +42,7 @@ test_programs = 			\
 	pixbuf-save			\
 	pixbuf-readonly-to-mutable	\
 	pixbuf-composite		\
+	pixbuf-area-updated		\
 	$(NULL)
 
 dist_installed_test_data =		\
@@ -64,10 +66,17 @@ dist_installed_test_data =		\
 	test-image.pixdata		\
 	test-image-rle.pixdata		\
 	bug775693.pixdata		\
+	aero.gif			\
 	$(wildcard $(srcdir)/test-images/fail/*) \
 	$(wildcard $(srcdir)/test-images/randomly-modified/*) \
 	$(wildcard $(srcdir)/test-images/reftests/*.*) \
 	$(wildcard $(srcdir)/test-images/reftests/tga/*) \
+	$(NULL)
+
+pixbuf_area_updated_SOURCES =		\
+	pixbuf-area-updated.c		\
+	test-common.c			\
+	test-common.h			\
 	$(NULL)
 
 pixbuf_randomly_modified_SOURCES =	\
