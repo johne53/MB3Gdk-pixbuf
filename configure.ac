@@ -16,7 +16,7 @@ AC_PREREQ([2.63])
 m4_define([gdk_pixbuf_major_version], [2])
 m4_define([gdk_pixbuf_minor_version], [36])
 m4_define([gdk_pixbuf_micro_version], [5])
-m4_define([gdk_pixbuf_interface_age], [4])
+m4_define([gdk_pixbuf_interface_age], [5])
 m4_define([gdk_pixbuf_binary_age],
           [m4_eval(100 * gdk_pixbuf_minor_version + gdk_pixbuf_micro_version)])
 m4_define([gdk_pixbuf_version],
@@ -26,7 +26,7 @@ m4_define([gdk_pixbuf_binary_version], [2.10.0])
 
 
 # required versions of other packages
-m4_define([glib_required_version], [2.37.6])
+m4_define([glib_required_version], [2.48.0])
 
 AC_INIT([gdk-pixbuf], [gdk_pixbuf_version],
         [http://bugzilla.gnome.org/enter_bug.cgi?product=gdk-pixbuf],
@@ -1094,6 +1094,12 @@ if test "x$enable_relocations" = "xyes"; then
                   [Define to 1 to replace the build-time prefix in modules])
 fi
 
+##############################################
+# Check whether MSVC toolset is explicitly set
+##############################################
+AM_CONDITIONAL(MSVC_BASE_NO_TOOLSET_SET, [test x$MSVC_BASE_TOOLSET = x])
+AM_CONDITIONAL(MSVC_NO_TOOLSET_SET, [test x$MSVC_TOOLSET = x])
+
 ##################################################
 # Output commands
 ##################################################
@@ -1114,6 +1120,7 @@ win32/vs10/gdk-pixbuf-version-paths.props
 win32/vs11/Makefile
 win32/vs12/Makefile
 win32/vs14/Makefile
+win32/vs15/Makefile
 docs/Makefile
 docs/reference/Makefile
 docs/reference/gdk-pixbuf/Makefile

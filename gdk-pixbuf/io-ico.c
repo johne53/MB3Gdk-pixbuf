@@ -944,9 +944,14 @@ gdk_pixbuf__ico_image_load_increment(gpointer data,
 				buf += BytesToCopy;
 				context->LineDone += BytesToCopy;
 			}
-			if ((context->LineDone >= context->LineWidth) &&
-			    (context->LineWidth > 0))
+			if ((context->LineDone >= context->LineWidth) && (context->LineWidth > 0)) {
+				/* By this point, DecodeHeader() will have been called, and should have returned successfully
+				 * or set a #GError, as its only return-FALSE-without-setting-a-GError paths are when
+				 * (context->HeaderDone < context->HeaderSize) or (context->LineWidth == 0).
+				 * If it’s returned a #GError, we will have bailed already; otherwise, pixbuf will be set. */
+				g_assert (context->pixbuf != NULL);
 				OneLine(context);
+			}
 
 
 		}
@@ -1235,6 +1240,47 @@ write_icon (FILE *f, GSList *entries)
 	}
 }
 
+/* Locale-independent signed integer string parser, base 10.
+ * @minimum and @maximum are valid inclusively. */
+static gboolean
+ascii_strtoll (const gchar  *str,
+               gint64        minimum,
+               gint64        maximum,
+               gint64       *out,
+               GError      **error)
+{
+	gint64 retval;
+	const gchar *end_ptr;
+
+	errno = 0;
+	retval = g_ascii_strtoll (str, (gchar **) &end_ptr, 10);
+
+	if (errno != 0) {
+		g_set_error_literal (error,
+		                     G_IO_ERROR, G_IO_ERROR_INVALID_ARGUMENT,
+		                     g_strerror (errno));
+		return FALSE;
+	} else if (end_ptr == str || *end_ptr != '\0') {
+		g_set_error (error, G_IO_ERROR, G_IO_ERROR_INVALID_ARGUMENT,
+		             "Argument is not an integer: %s", str);
+		return FALSE;
+	} else if ((maximum < G_MAXINT64 && retval > maximum) ||
+	           (minimum > G_MININT64 && retval < minimum)) {
+		g_set_error (error, G_IO_ERROR, G_IO_ERROR_INVALID_ARGUMENT,
+		             "Argument should be in range [%" G_GINT64_FORMAT
+		             ", %" G_GINT64_FORMAT "]: %s",
+		             minimum, maximum, str);
+		return FALSE;
+	}
+
+	g_assert (retval >= minimum && retval <= maximum);
+
+	if (out != NULL)
+		*out = retval;
+
+	return TRUE;
+}
+
 static gboolean
 gdk_pixbuf__ico_image_save (FILE          *f, 
                             GdkPixbuf     *pixbuf, 
@@ -1260,15 +1306,24 @@ gdk_pixbuf__ico_image_save (FILE          *f,
 		gchar **viter;
 		
 		for (kiter = keys, viter = values; *kiter && *viter; kiter++, viter++) {
-			char *endptr;
+			gint64 out;
 			if (strcmp (*kiter, "depth") == 0) {
-				sscanf (*viter, "%d", &icon->depth);
+				if (!ascii_strtoll (*viter, 1, 32,
+				                    &out, error))
+					return FALSE;
+				icon->depth = out;
 			}
 			else if (strcmp (*kiter, "x_hot") == 0) {
-				hot_x = strtol (*viter, &endptr, 10);
+				if (!ascii_strtoll (*viter, G_MININT, G_MAXINT,
+				                    &out, error))
+					return FALSE;
+				hot_x = out;
 			}
 			else if (strcmp (*kiter, "y_hot") == 0) {
-				hot_y = strtol (*viter, &endptr, 10);
+				if (!ascii_strtoll (*viter, G_MININT, G_MAXINT,
+				                    &out, error))
+					return FALSE;
+				hot_y = out;
 			}
 
 		}
