@@ -327,6 +327,10 @@
 				>
 			</File>
 			<File
+				RelativePath="..\gdk-pixbuf\gdk-pixbuf-marshal.c"
+				>
+			</File>
+			<File
 				RelativePath="$(GdkPixbufBuildRootFolder)\gdk-pixbuf\gdk-pixbuf-scale.c"
 				>
 			</File>
