@@ -472,7 +472,8 @@ libgdk_pixbuf_2_0_la_SOURCES =   \
 	gdk-pixbuf-scaled-anim.c \
 	gdk-pixbuf-util.c	 \
 	gdk-pixdata.c		 \
-	gdk-pixbuf-enum-types.c
+	gdk-pixbuf-enum-types.c  \
+	gdk-pixbuf-marshal.c
 
 libgdk_pixbuf_2_0_la_CFLAGS =			\
 	$(AM_CPPFLAGS)				\
@@ -594,7 +595,6 @@ EXTRA_DIST =					\
 	gdk-pixbuf-marshal.list			\
 	gdk-pixbuf-enum-types.c.template	\
 	gdk-pixbuf-enum-types.h.template	\
-	gen-color-table.pl			\
 	gdiplus.def				\
 	fallback-c89.c
 

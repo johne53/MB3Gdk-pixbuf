@@ -142,9 +142,9 @@ struct _GifContext
 	GdkPixbufModuleUpdatedFunc update_func;
 	gpointer user_data;
         guchar *buf;
-	guint ptr;
-	guint size;
-	guint amount_needed;
+	gsize ptr;
+	gsize size;
+	gsize amount_needed;
 
 	/* extension context */
 	guchar extension_label;
@@ -211,7 +211,7 @@ gif_read (GifContext *context, guchar *buffer, size_t len)
 		count += len;
 		g_print ("Fsize :%d\tcount :%d\t", len, count);
 #endif
-		retval = (fread(buffer, len, 1, context->file) != 0);
+		retval = (fread (buffer, 1, len, context->file) == len);
 
                 if (!retval && ferror (context->file)) {
                         gint save_errno = errno;

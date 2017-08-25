@@ -131,7 +131,7 @@ struct ico_direntry_data {
 	gint ImageScore;
         gint width;
         gint height;
-	gint DIBoffset;
+	guint DIBoffset;
 	gint x_hot;
 	gint y_hot;
 };
@@ -166,7 +166,7 @@ struct ico_progressive_state {
 
 	struct headerpair Header;	/* Decoded (BE->CPU) header */
 	GList *entries;
-	gint			DIBoffset;
+	guint			DIBoffset;
 
 	GdkPixbuf *pixbuf;	/* Our "target" */
 };
@@ -203,7 +203,11 @@ compare_direntry_scores (gconstpointer a,
 	const struct ico_direntry_data *ib = b;
 
 	/* Backwards, so largest first */
-	return ib->ImageScore - ia->ImageScore;
+	if (ib->ImageScore < ia->ImageScore)
+		return -1;
+	else if (ib->ImageScore > ia->ImageScore)
+		return 1;
+	return 0;
 }
 
 static void DecodeHeader(guchar *Data, gint Bytes,
@@ -221,6 +225,7 @@ static void DecodeHeader(guchar *Data, gint Bytes,
  	gint I;
 	guint16 imgtype; /* 1 = icon, 2 = cursor */
 	GList *l;
+	gboolean got_broken_header = FALSE;
 
  	/* Step 1: The ICO header */
 
@@ -280,16 +285,16 @@ static void DecodeHeader(guchar *Data, gint Bytes,
                 int depth;
                 int x_hot;
                 int y_hot;
-                int data_size G_GNUC_UNUSED;
-                int data_offset;
+                guint data_size G_GNUC_UNUSED;
+                guint data_offset;
 
                 width = Ptr[0];
                 height = Ptr[1];
                 depth = Ptr[2];
 		x_hot = (Ptr[5] << 8) + Ptr[4];
 		y_hot = (Ptr[7] << 8) + Ptr[6];
-                data_size = (Ptr[11] << 24) + (Ptr[10] << 16) + (Ptr[9] << 8) + (Ptr[8]);
-		data_offset = (Ptr[15] << 24) + (Ptr[14] << 16) + (Ptr[13] << 8) + (Ptr[12]);
+                data_size = ((guint) (Ptr[11]) << 24) + (Ptr[10] << 16) + (Ptr[9] << 8) + (Ptr[8]);
+		data_offset = ((guint) (Ptr[15]) << 24) + (Ptr[14] << 16) + (Ptr[13] << 8) + (Ptr[12]);
                 DEBUG(g_print ("Image %d: %d x %d\n\tDepth: %d\n", I, width, height, depth);
                 if (imgtype == 2)
                   g_print ("\tHotspot: %d x %d\n", x_hot, y_hot);
@@ -306,6 +311,12 @@ static void DecodeHeader(guchar *Data, gint Bytes,
                 else if (depth <= 256)
                         depth = 8;
 
+		/* We check whether the HeaderSize (int) would overflow */
+                if (data_offset > INT_MAX - INFOHEADER_SIZE) {
+			got_broken_header = TRUE;
+			continue;
+		}
+
 		entry = g_new0 (struct ico_direntry_data, 1);
                 entry->width = width ? width : 256;
                 entry->height = height ? height : 256;
@@ -321,14 +332,6 @@ static void DecodeHeader(guchar *Data, gint Bytes,
 	entry = NULL;
 	for (l = State->entries; l != NULL; l = g_list_next (l)) {
 		entry = l->data;
-
-		if (entry->DIBoffset < 0) {
-			g_set_error (error,
-			             GDK_PIXBUF_ERROR,
-			             GDK_PIXBUF_ERROR_CORRUPT_IMAGE,
-			             _("Invalid header in icon (%s)"), "dib offset");
-			return;
-		}
 
 		/* We know how many bytes are in the "header" part. */
 		State->HeaderSize = entry->DIBoffset + INFOHEADER_SIZE;
@@ -375,9 +378,11 @@ static void DecodeHeader(guchar *Data, gint Bytes,
 	/* No valid icon found, because all are compressed? */
 	if (l == NULL) {
 		g_set_error_literal (error,
-		                     GDK_PIXBUF_ERROR,
-		                     GDK_PIXBUF_ERROR_CORRUPT_IMAGE,
-		                     _("Compressed icons are not supported"));
+				     GDK_PIXBUF_ERROR,
+				     GDK_PIXBUF_ERROR_CORRUPT_IMAGE,
+				     got_broken_header ?
+					_("Invalid header in icon") :
+					_("Compressed icons are not supported"));
 		return;
 	}
 
@@ -605,6 +610,7 @@ gdk_pixbuf__ico_image_stop_load(gpointer data,
 {
 	struct ico_progressive_state *context =
 	    (struct ico_progressive_state *) data;
+	gboolean ret = TRUE;
 
         /* FIXME this thing needs to report errors if
          * we have unused image data
@@ -612,8 +618,16 @@ gdk_pixbuf__ico_image_stop_load(gpointer data,
 
 	g_return_val_if_fail(context != NULL, TRUE);
 
+	if (context->HeaderDone < context->HeaderSize) {
+		g_set_error_literal (error,
+				     GDK_PIXBUF_ERROR,
+				     GDK_PIXBUF_ERROR_CORRUPT_IMAGE,
+				     _("ICO image was truncated or incomplete."));
+		ret = FALSE;
+	}
+
 	context_free (context);
-        return TRUE;
+        return ret;
 }
 
 static void
@@ -936,6 +950,9 @@ gdk_pixbuf__ico_image_load_increment(gpointer data,
 				BytesToCopy = size;
 
 			if (BytesToCopy > 0) {
+				/* Should be non-NULL once the header is decoded, as below. */
+				g_assert (context->LineBuf != NULL);
+
 				memmove(context->LineBuf +
 				       context->LineDone, buf,
 				       BytesToCopy);

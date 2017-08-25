@@ -699,16 +699,13 @@ gdk_pixbuf__jpeg_image_load (FILE *f, GError **error)
 		      convert_cmyk_to_rgb (&cinfo, lines);
 		      break;
 		    default:
-		      g_object_unref (pixbuf);
-		      pixbuf = NULL;
-		      if (error && *error == NULL) {
-                        g_set_error (error,
-                                     GDK_PIXBUF_ERROR,
-				     GDK_PIXBUF_ERROR_UNKNOWN_TYPE,
-				     _("Unsupported JPEG color space (%s)"),
-				     colorspace_name (cinfo.out_color_space)); 
-		      }
-               	      goto out; 
+		      g_clear_object (&pixbuf);
+                      g_set_error (error,
+                                   GDK_PIXBUF_ERROR,
+				   GDK_PIXBUF_ERROR_UNKNOWN_TYPE,
+				   _("Unsupported JPEG color space (%s)"),
+				   colorspace_name (cinfo.out_color_space));
+		      goto out;
 		}
 	}
 
@@ -914,13 +911,11 @@ gdk_pixbuf__jpeg_image_load_lines (JpegProgContext  *context,
                         convert_cmyk_to_rgb (cinfo, lines);
                         break;
                 default:
-                        if (error && *error == NULL) {
-                                g_set_error (error,
-                                             GDK_PIXBUF_ERROR,
-                                             GDK_PIXBUF_ERROR_UNKNOWN_TYPE,
-                                             _("Unsupported JPEG color space (%s)"),
-                                             colorspace_name (cinfo->out_color_space));
-                        }
+                        g_set_error (error,
+                                     GDK_PIXBUF_ERROR,
+                                     GDK_PIXBUF_ERROR_UNKNOWN_TYPE,
+                                     _("Unsupported JPEG color space (%s)"),
+                                     colorspace_name (cinfo->out_color_space));
 
                         return FALSE;
                 }
@@ -1051,6 +1046,7 @@ gdk_pixbuf__jpeg_image_load_increment (gpointer data,
 		if (!context->got_header) {
 			int rc;
 			gchar* comment;
+			gboolean has_alpha;
 		
 			jpeg_save_markers (cinfo, JPEG_APP0+1, 0xffff);
 			jpeg_save_markers (cinfo, JPEG_APP0+2, 0xffff);
@@ -1089,10 +1085,27 @@ gdk_pixbuf__jpeg_image_load_increment (gpointer data,
 				}
 			}
 			jpeg_calc_output_dimensions (cinfo);
-			
-			context->pixbuf = gdk_pixbuf_new (GDK_COLORSPACE_RGB, 
-							  cinfo->output_components == 4 ? TRUE : FALSE,
-							  8, 
+
+			if (cinfo->output_components == 3) {
+				has_alpha = FALSE;
+			} else if (cinfo->output_components == 4) {
+				has_alpha = TRUE;
+			} else if (cinfo->output_components == 1 &&
+				   cinfo->out_color_space == JCS_GRAYSCALE) {
+				has_alpha = FALSE;
+			} else {
+				g_set_error (error,
+					     GDK_PIXBUF_ERROR,
+					     GDK_PIXBUF_ERROR_CORRUPT_IMAGE,
+					     _("Unsupported number of color components (%d)"),
+					     cinfo->output_components);
+				retval = FALSE;
+				goto out;
+			}
+
+			context->pixbuf = gdk_pixbuf_new (GDK_COLORSPACE_RGB,
+							  has_alpha,
+							  8,
 							  cinfo->output_width,
 							  cinfo->output_height);
 

@@ -124,24 +124,26 @@ tiff_image_parse (TIFF *tiff, TiffContext *context, GError **error)
                                      _("Width or height of TIFF image is zero"));
                 return NULL;                
         }
-        
+
+        if (width > G_MAXINT / 4) { /* overflow */
+                g_set_error_literal (error,
+                                     GDK_PIXBUF_ERROR,
+                                     GDK_PIXBUF_ERROR_CORRUPT_IMAGE,
+                                     _("Dimensions of TIFF image too large"));
+                return NULL;                
+        }
+
         rowstride = width * 4;
-        if (rowstride / 4 != width) { /* overflow */
+
+        if (height > G_MAXINT / rowstride) { /* overflow */
                 g_set_error_literal (error,
                                      GDK_PIXBUF_ERROR,
                                      GDK_PIXBUF_ERROR_CORRUPT_IMAGE,
                                      _("Dimensions of TIFF image too large"));
                 return NULL;                
         }
-        
+
         bytes = height * rowstride;
-        if (bytes / rowstride != height) { /* overflow */
-                g_set_error_literal (error,
-                                     GDK_PIXBUF_ERROR,
-                                     GDK_PIXBUF_ERROR_CORRUPT_IMAGE,
-                                     _("Dimensions of TIFF image too large"));
-                return NULL;                
-        }
 
 	if (context && context->size_func) {
                 gint w = width;
@@ -454,7 +456,7 @@ gdk_pixbuf__tiff_image_stop_load (gpointer data,
 {
         TiffContext *context = data;
         TIFF *tiff;
-        gboolean retval;
+        gboolean retval = FALSE;
         
         g_return_val_if_fail (data != NULL, FALSE);
 
@@ -470,20 +472,18 @@ gdk_pixbuf__tiff_image_stop_load (gpointer data,
                                      GDK_PIXBUF_ERROR,
                                      GDK_PIXBUF_ERROR_FAILED,
                                      _("Failed to load TIFF image"));
-                retval = FALSE;
         } else {
                 GdkPixbuf *pixbuf;
                 
                 pixbuf = tiff_image_parse (tiff, context, error);
-                if (pixbuf)
-                        g_object_unref (pixbuf);
-                retval = pixbuf != NULL;
+                retval = (pixbuf != NULL);
+                g_clear_object (&pixbuf);
+                /* tiff_image_parse() can return NULL on success in a particular case */
                 if (!retval && error && !*error) {
                         g_set_error_literal (error,
                                              GDK_PIXBUF_ERROR,
                                              GDK_PIXBUF_ERROR_FAILED,
                                              _("Failed to load TIFF image"));
-                                retval = FALSE;
                 }
         }
 

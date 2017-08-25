@@ -1433,9 +1433,7 @@ load_from_stream (GdkPixbufLoader  *loader,
         GdkPixbuf *pixbuf;
         gssize n_read;
         guchar buffer[LOAD_BUFFER_SIZE];
-        gboolean res;
 
-        res = TRUE;
         while (1) { 
                 n_read = g_input_stream_read (stream, 
                                               buffer, 
@@ -1443,9 +1441,8 @@ load_from_stream (GdkPixbufLoader  *loader,
                                               cancellable, 
                                               error);
                 if (n_read < 0) {
-                        res = FALSE;
-                        error = NULL; /* Ignore further errors */
-                        break;
+                        gdk_pixbuf_loader_close (loader, NULL);
+                        return NULL;
                 }
 
                 if (n_read == 0)
@@ -1455,25 +1452,19 @@ load_from_stream (GdkPixbufLoader  *loader,
                                               buffer, 
                                               n_read, 
                                               error)) {
-                        res = FALSE;
-                        error = NULL;
-                        break;
+                        gdk_pixbuf_loader_close (loader, NULL);
+                        return NULL;
                 }
         }
 
-        if (!gdk_pixbuf_loader_close (loader, error)) {
-                res = FALSE;
-                error = NULL;
-        }
+        if (!gdk_pixbuf_loader_close (loader, error))
+                return NULL;
 
-        pixbuf = NULL;
-        if (res) {
-                pixbuf = gdk_pixbuf_loader_get_pixbuf (loader);
-                if (pixbuf)
-                        g_object_ref (pixbuf);
-        }
+        pixbuf = gdk_pixbuf_loader_get_pixbuf (loader);
+        if (pixbuf == NULL)
+                return NULL;
 
-        return pixbuf;
+        return g_object_ref (pixbuf);
 }
 
 
@@ -1656,7 +1647,6 @@ gdk_pixbuf_new_from_stream (GInputStream  *stream,
 GdkPixbuf *
 _gdk_pixbuf_new_from_resource_try_pixdata (const char *resource_path)
 {
-	guint32 flags;
 	gsize data_size;
 	GBytes *bytes;
 
@@ -1665,7 +1655,8 @@ G_GNUC_BEGIN_IGNORE_DEPRECATIONS
 	 * compiled-in resource data, whether uncompressed and mmap'ed, or
 	 * compressed, and uncompressed on-the-fly.
          */
-	if (g_resources_get_info  (resource_path, 0, &data_size, &flags, NULL) &&
+	if (g_resources_get_info  (resource_path, 0, &data_size, NULL, NULL) &&
+	    data_size > sizeof(guint32) &&
 	    (bytes = g_resources_lookup_data (resource_path, 0, NULL)) != NULL) {
 		GdkPixbuf*pixbuf = NULL;
 		const guint8 *stream = g_bytes_get_data (bytes, NULL);

@@ -15,8 +15,8 @@ AC_PREREQ([2.63])
 
 m4_define([gdk_pixbuf_major_version], [2])
 m4_define([gdk_pixbuf_minor_version], [36])
-m4_define([gdk_pixbuf_micro_version], [6])
-m4_define([gdk_pixbuf_interface_age], [6])
+m4_define([gdk_pixbuf_micro_version], [9])
+m4_define([gdk_pixbuf_interface_age], [0])
 m4_define([gdk_pixbuf_binary_age],
           [m4_eval(100 * gdk_pixbuf_minor_version + gdk_pixbuf_micro_version)])
 m4_define([gdk_pixbuf_version],
@@ -96,12 +96,12 @@ PKG_PROG_PKG_CONFIG
 
 AC_CANONICAL_HOST
 
-AC_ARG_ENABLE(gio-sniffing,
-              [AC_HELP_STRING([--enable-gio-sniffing=@<:@no/yes/auto@:>@],
-                              [enable or disable gio sniffing [default=auto]])],,
-              [enable_gio_sniffing=auto])
+# Check for libm and look for these C99 functions
+AC_CHECK_LIBM
+AC_SUBST(LIBM)
+AC_CHECK_LIB(m, round, AC_DEFINE(HAVE_ROUND, [1], [Define to 1 if libm has round]))
+AC_CHECK_LIB(m, lrint, AC_DEFINE(HAVE_LRINT, [1], [Define to 1 if libm has lrint]))
 
-MATH_LIB=-lm
 AC_MSG_CHECKING([for native Win32])
 LIB_EXE_MACHINE_FLAG=X86
 EXE_MANIFEST_ARCHITECTURE=X86
@@ -109,13 +109,15 @@ case "$host" in
   *-*-mingw*)
     os_win32=yes
     gio_can_sniff=no
-    MATH_LIB=
     case "$host" in
     x86_64-*-*)
       LIB_EXE_MACHINE_FLAG=X64
       EXE_MANIFEST_ARCHITECTURE=AMD64
       ;;
     esac
+    ;;
+  *-*-darwin*)
+    gio_can_sniff=no
     ;;
   *)
     os_win32=no
@@ -336,68 +338,6 @@ AC_SUBST(GETTEXT_PACKAGE)
 AC_DEFINE_UNQUOTED(GETTEXT_PACKAGE, "$GETTEXT_PACKAGE",
                    [The prefix for our gettext translation domains.])
 
-dnl The DU4 header files don't provide library prototypes unless
-dnl -std1 is given to the native cc.
-AC_MSG_CHECKING([for extra flags to get ANSI library prototypes])
-
-gtk_save_LIBS=$LIBS
-LIBS="$LIBS -lm"
-AC_TRY_RUN([#include <math.h>
-             int main (void) { return (log(1) != log(1.)); }],
-     AC_MSG_RESULT(none needed),
-     gtk_save_CFLAGS="$CFLAGS"
-     CFLAGS="$CFLAGS -std1"
-     AC_TRY_RUN([#include <math.h>
-                 int main (void) { return (log(1) != log(1.)); }],
-         AC_MSG_RESULT(-std1),
-         AC_MSG_RESULT()
-         CFLAGS="$gtk_save_CFLAGS"
-         AC_MSG_WARN(
-                [No ANSI prototypes found in library. (-std1 didn't work.)]),
-         true
-     ),
-     AC_MSG_RESULT(none needed)
-)
-LIBS=$gtk_save_LIBS
-
-AC_MSG_CHECKING(for the BeOS)
-case $host in
-  *-*-beos*)
-    AC_MSG_RESULT(yes)
-    MATH_LIB=
-  ;;
-  *)
-    AC_MSG_RESULT(no)
-  ;;
-esac
-
-AC_SUBST(MATH_LIB)
-#
-# see bug 162979
-#
-AC_MSG_CHECKING(for HP-UX)
-case $host_os in
-  hpux9* | hpux10* | hpux11*)
-    AC_MSG_RESULT(yes)
-    CFLAGS="$CFLAGS -DHPPEX -DSHMLINK"
-  ;;
-  *)
-    AC_MSG_RESULT(no)
-  ;;
-esac
-
-dnl NeXTStep cc seems to need this
-AC_MSG_CHECKING([for extra flags for POSIX compliance])
-AC_TRY_COMPILE([#include <dirent.h>], [DIR *dir;],
-  AC_MSG_RESULT(none needed),
-  gtk_save_CFLAGS="$CFLAGS"
-  CFLAGS="$CFLAGS -posix"
-  AC_TRY_COMPILE([#include <dirent.h>], [DIR *dir;],
-    AC_MSG_RESULT(-posix),
-    AC_MSG_RESULT()
-    CFLAGS="$gtk_save_CFLAGS"
-    AC_MSG_WARN([Could not determine POSIX flag. (-posix didn't work.)])))
-
 #
 # Run AM_PATH_GLIB_2_0 to make sure that GLib is installed and working
 #
@@ -418,15 +358,11 @@ LIBS="$LIBS $GLIB_LIBS"
 AC_CHECK_FUNCS(bind_textdomain_codeset)
 LIBS=$gtk_save_LIBS
 
-AC_CHECK_HEADERS(unistd.h sys/resource.h)
+AC_CHECK_HEADERS(unistd.h sys/resource.h sys/time.h)
 AC_CHECK_FUNCS(setrlimit)
 
 saved_cflags="$CFLAGS"
 saved_ldflags="$LDFLAGS"
-
-AC_CHECK_LIB(m,round,)
-AC_CHECK_LIB(m,lrint,)
-AC_CHECK_FUNCS(round lrint)
 
 # Checks for header files.
 AC_HEADER_STDC
@@ -517,24 +453,14 @@ AC_ARG_WITH(gdiplus,
 AM_CONDITIONAL(BUILD_GDIPLUS_LOADERS, [ test x$os_win32 = xyes && test x$with_gdiplus != xno ])
 
 dnl Test for libtiff
+libtiff_found=no
 if test x$os_win32 = xno || test x$with_gdiplus = xno; then
-  if test x$with_libtiff != xno && test -z "$LIBTIFF"; then
-    AC_CHECK_LIB(tiff, TIFFReadRGBAImageOriented,
-      [AC_CHECK_HEADER(tiffio.h,
-        TIFF='tiff'; LIBTIFF='-ltiff',
-        AC_MSG_WARN(*** TIFF loader will not be built (TIFF header files not found) ***))],
-      [AC_CHECK_LIB(tiff, TIFFWriteScanline,
-        [AC_CHECK_HEADER(tiffio.h,
-          TIFF='tiff'; LIBTIFF='-ltiff -ljpeg -lz',
-          AC_MSG_WARN(*** TIFF loader will not be built (TIFF header files not found) ***))],
-        [AC_CHECK_LIB(tiff34, TIFFFlushData,
-          [AC_CHECK_HEADER(tiffio.h,
-            TIFF='tiff'; LIBTIFF='-ltiff34 -ljpeg -lz',
-            AC_MSG_WARN(*** TIFF loader will not be built (TIFF header files not found) ***))],
-        AC_MSG_WARN(*** TIFF loader will not be built (TIFF library not found) ***), -ljpeg -lz -lm)], -ljpeg -lz -lm)], -lm)
+  if test x$with_libtiff != xno; then
+    PKG_CHECK_MODULES(TIFF, libtiff-4)
+    libtiff_found=yes
   fi
 
-  if test x$with_libtiff != xno && test -z "$LIBTIFF"; then
+  if test x$with_libtiff != xno && test x$libtiff_found = xno; then
      AC_MSG_ERROR([
 *** Checks for TIFF loader failed. You can build without it by passing
 *** --without-libtiff to configure but some programs using GTK+ may
@@ -744,55 +670,10 @@ AM_CONDITIONAL(INCLUDE_QTIF, [test x"$INCLUDE_qtif" = xyes])
 # check one of the variables here
 AM_CONDITIONAL(INCLUDE_GDIPLUS, [test x"$INCLUDE_gdip_ico" = xyes])
 
-if test x$enable_gio_sniffing = xauto && test x$gio_can_sniff = x; then
-  AC_MSG_CHECKING([if gio can sniff png])
-  gtk_save_LIBS="$LIBS"
-  gtk_save_CFLAGS="$CFLAGS"
-  LIBS="`$PKG_CONFIG --libs gio-2.0`"
-  CFLAGS="`$PKG_CONFIG --cflags gio-2.0`"
-  AC_RUN_IFELSE([AC_LANG_SOURCE([[
-  #include <gio/gio.h>
-  static const gsize data_size = 159;
-  static const guint8 data[] =
-  {
-    0x89, 0x50, 0x4e, 0x47, 0x0d, 0x0a, 0x1a, 0x0a, 0x00, 0x00, 0x00, 0x0d,
-    0x49, 0x48, 0x44, 0x52, 0x00, 0x00, 0x00, 0x01, 0x00, 0x00, 0x00, 0x01,
-    0x08, 0x02, 0x00, 0x00, 0x00, 0x90, 0x77, 0x53, 0xde, 0x00, 0x00, 0x00,
-    0x01, 0x73, 0x52, 0x47, 0x42, 0x00, 0xae, 0xce, 0x1c, 0xe9, 0x00, 0x00,
-    0x00, 0x09, 0x70, 0x48, 0x59, 0x73, 0x00, 0x00, 0x0b, 0x13, 0x00, 0x00,
-    0x0b, 0x13, 0x01, 0x00, 0x9a, 0x9c, 0x18, 0x00, 0x00, 0x00, 0x07, 0x74,
-    0x49, 0x4d, 0x45, 0x07, 0xd8, 0x07, 0x0f, 0x10, 0x08, 0x15, 0x61, 0xd8,
-    0x35, 0x37, 0x00, 0x00, 0x00, 0x19, 0x74, 0x45, 0x58, 0x74, 0x43, 0x6f,
-    0x6d, 0x6d, 0x65, 0x6e, 0x74, 0x00, 0x43, 0x72, 0x65, 0x61, 0x74, 0x65,
-    0x64, 0x20, 0x77, 0x69, 0x74, 0x68, 0x20, 0x47, 0x49, 0x4d, 0x50, 0x57,
-    0x81, 0x0e, 0x17, 0x00, 0x00, 0x00, 0x0c, 0x49, 0x44, 0x41, 0x54, 0x08,
-    0xd7, 0x63, 0xf8, 0xff, 0xff, 0x3f, 0x00, 0x05, 0xfe, 0x02, 0xfe, 0xdc,
-    0xcc, 0x59, 0xe7, 0x00, 0x00, 0x00, 0x00, 0x49, 0x45, 0x4e, 0x44, 0xae,
-    0x42, 0x60, 0x82
-  };
-  int
-  main (int argc, char **argv)
-  {
-    char *content_type;
-    char *image_png;
-    g_type_init ();
-    content_type = g_content_type_guess (NULL, data, data_size, NULL);
-    image_png = g_content_type_from_mime_type ("image/png");
-    return !!g_strcmp0 (content_type, image_png);
-  }]])],
-    [gio_can_sniff=yes
-     AC_DEFINE(GDK_PIXBUF_USE_GIO_MIME, 1, [Define if gio can sniff image data])],
-    [gio_can_sniff=no])
-  AC_MSG_RESULT($gio_can_sniff)
-  LIBS="$gtk_save_LIBS"
-  CFLAGS="$gtk_save_CFLAGS"
-else
-  if test x$enable_gio_sniffing = xyes; then
-     gio_can_sniff=yes
-     AC_DEFINE(GDK_PIXBUF_USE_GIO_MIME, 1, [Define if gio can sniff image data])
-  else
-     gio_can_sniff=no
-  fi
+if test x$gio_can_sniff = x; then
+  # Will not run on win32, so require shared-mime-info
+  PKG_CHECK_MODULES(SHARED_MIME_INFO, shared-mime-info)
+  AC_DEFINE(GDK_PIXBUF_USE_GIO_MIME, 1, [Define if gio can sniff image data])
 fi
 
 AM_CONDITIONAL(HAVE_TIFF, test "x$LIBTIFF" != x)
@@ -884,7 +765,7 @@ if test $use_x86_asm = yes; then
     ac_ext=$save_ac_ext
     if test $use_mmx_asm = yes; then
       AC_DEFINE(USE_MMX, 1,
-                [Define to 1 if XXM is available and should be used])
+                [Define to 1 if MMX is available and should be used])
       AC_MSG_RESULT(yes)
     else
       AC_MSG_RESULT(no)
@@ -896,7 +777,7 @@ AM_CONDITIONAL(USE_MMX, test x$use_mmx_asm = xyes)
 AM_CONDITIONAL(CROSS_COMPILING, test $cross_compiling = yes)
 
 GDK_PIXBUF_PACKAGES="gmodule-no-export-2.0 gobject-2.0 gio-2.0"
-GDK_PIXBUF_EXTRA_LIBS="$STATIC_LIB_DEPS $MATH_LIB $MEDIA_LIB"
+GDK_PIXBUF_EXTRA_LIBS="$STATIC_LIB_DEPS $LIBM $MEDIA_LIB"
 GDK_PIXBUF_EXTRA_CFLAGS=
 GDK_PIXBUF_DEP_LIBS="`$PKG_CONFIG --libs $GDK_PIXBUF_PACKAGES $PNG_DEP_CFLAGS_PACKAGES` $GDK_PIXBUF_EXTRA_LIBS"
 GDK_PIXBUF_DEP_CFLAGS="`$PKG_CONFIG --cflags  gthread-2.0 $GDK_PIXBUF_PACKAGES $PNG_DEP_CFLAGS_PACKAGES` $GDK_PIXBUF_EXTRA_CFLAGS"
@@ -1110,7 +991,6 @@ AM_CONDITIONAL(MSVC_NO_TOOLSET_SET, [test x$MSVC_TOOLSET = x])
 AC_CONFIG_FILES([
 Makefile
 gdk-pixbuf-2.0.pc
-gdk-pixbuf-2.0-uninstalled.pc
 gdk-pixbuf/Makefile
 gdk-pixbuf/gdk_pixbuf.rc
 gdk-pixbuf/gdk-pixbuf-features.h
