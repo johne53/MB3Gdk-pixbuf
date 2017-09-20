@@ -116,11 +116,28 @@ foreach t: installed_tests
                         ],
                         c_args: common_cflags)
 
+  # Two particularly slow tests
+  if test_name == 'pixbuf-area-updated' or test_name == 'pixbuf-randomly-modified'
+    timeout = 300
+  else
+    timeout = 30
+  endif
+
   test(test_name, test_bin,
        args: [ '-k', '--tap' ],
        env: [
          'G_TEST_SRCDIR=@0@'.format(meson.current_source_dir()),
          'G_TEST_BUILDDIR=@0@'.format(meson.current_build_dir()),
          'GDK_PIXBUF_MODULE_FILE=@0@'.format(loaders_cache.full_path()),
-       ])
+       ],
+       timeout: timeout)
 endforeach
+
+executable('pixbuf-read',
+           'pixbuf-read.c',
+           dependencies: test_deps,
+           include_directories: [
+             root_inc,
+             include_directories('../gdk-pixbuf')
+           ],
+           c_args: common_cflags)

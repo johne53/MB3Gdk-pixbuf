@@ -15,7 +15,7 @@ AC_PREREQ([2.63])
 
 m4_define([gdk_pixbuf_major_version], [2])
 m4_define([gdk_pixbuf_minor_version], [36])
-m4_define([gdk_pixbuf_micro_version], [9])
+m4_define([gdk_pixbuf_micro_version], [10])
 m4_define([gdk_pixbuf_interface_age], [0])
 m4_define([gdk_pixbuf_binary_age],
           [m4_eval(100 * gdk_pixbuf_minor_version + gdk_pixbuf_micro_version)])
@@ -117,6 +117,7 @@ case "$host" in
     esac
     ;;
   *-*-darwin*)
+    os_win32=no
     gio_can_sniff=no
     ;;
   *)
@@ -508,7 +509,7 @@ fi
 
 dnl Test for libpng
   if test x$with_libpng != xno && test -z "$LIBPNG"; then
-    for l in libpng16 libpng15 libpng14 libpng12 libpng13 libpng10; do
+    for l in libpng16 libpng15 libpng14 libpng13 libpng12 libpng10; do
       AC_MSG_CHECKING(for $l)
       if $PKG_CONFIG --exists $l ; then
         AC_MSG_RESULT(yes)
@@ -564,7 +565,6 @@ dnl Test for libjasper
 *** --without-libjasper to configure])
   fi
 
-AC_SUBST(LIBTIFF)
 AC_SUBST(LIBJPEG)
 AC_SUBST(LIBPNG)
 AC_SUBST(LIBJASPER)
@@ -676,7 +676,7 @@ if test x$gio_can_sniff = x; then
   AC_DEFINE(GDK_PIXBUF_USE_GIO_MIME, 1, [Define if gio can sniff image data])
 fi
 
-AM_CONDITIONAL(HAVE_TIFF, test "x$LIBTIFF" != x)
+AM_CONDITIONAL(HAVE_TIFF, test "x$libtiff_found" != x)
 AM_CONDITIONAL(HAVE_PNG, test "x$LIBPNG" != x)
 AM_CONDITIONAL(HAVE_JPEG, test "x$LIBJPEG" != x)
 AM_CONDITIONAL(HAVE_JASPER, test "x$LIBJASPER" != x)
@@ -684,7 +684,7 @@ AM_CONDITIONAL(HAVE_JASPER, test "x$LIBJASPER" != x)
 if $dynworks ; then
   STATIC_LIB_DEPS=
   if echo "$included_loaders" | egrep '(^|,)tiff($|,)' > /dev/null; then
-    STATIC_LIB_DEPS="$STATIC_LIB_DEPS $LIBTIFF"
+    STATIC_LIB_DEPS="$STATIC_LIB_DEPS $TIFF_LIBS"
   fi
   if echo "$included_loaders" | egrep '(^|,)jpeg($|,)' > /dev/null; then
     STATIC_LIB_DEPS="$STATIC_LIB_DEPS $LIBJPEG"
@@ -698,7 +698,7 @@ if $dynworks ; then
     STATIC_LIB_DEPS="$STATIC_LIB_DEPS $LIBJASPER"
   fi
 else
-  STATIC_LIB_DEPS="$LIBTIFF $LIBJPEG $LIBPNG $LIBJASPER"
+  STATIC_LIB_DEPS="$TIFF_LIBS $LIBJPEG $LIBPNG $LIBJASPER"
 fi
 
 # Checks to see whether we should include mediaLib
