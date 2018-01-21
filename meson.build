@@ -1,5 +1,5 @@
 project('gdk-pixbuf', 'c',
-        version: '2.36.10',
+        version: '2.36.11',
         license: 'LGPLv2.1+',
         default_options: [
           'buildtype=debugoptimized',
@@ -389,7 +389,7 @@ gnome = import('gnome')
 subdir('gdk-pixbuf')
 
 if get_option('x11')
-  x11_dep = cc.find_library('X11')
+  x11_dep = cc.find_library('X11', required: false)
     if x11_dep.found()
       subdir('contrib/gdk-pixbuf-xlib')
     endif
