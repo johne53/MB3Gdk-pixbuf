@@ -119,7 +119,8 @@ prepared_notify (GdkPixbuf          *pixbuf,
 
 /**
  * gdk_pixbuf_animation_new_from_file:
- * @filename: Name of file to load, in the GLib file name encoding
+ * @filename: (type filename): Name of file to load, in the GLib file
+ *     name encoding
  * @error: return location for error
  *
  * Creates a new animation by loading it from a file. The file format is
@@ -153,7 +154,7 @@ gdk_pixbuf_animation_new_from_file (const gchar  *filename,
                 g_set_error (error,
                              G_FILE_ERROR,
                              g_file_error_from_errno (save_errno),
-                             _("Failed to open file '%s': %s"),
+                             _("Failed to open file “%s”: %s"),
                              display_name,
                              g_strerror (save_errno));
                 g_free (display_name);
@@ -166,7 +167,7 @@ gdk_pixbuf_animation_new_from_file (const gchar  *filename,
                 g_set_error (error,
                              GDK_PIXBUF_ERROR,
                              GDK_PIXBUF_ERROR_CORRUPT_IMAGE,
-                             _("Image file '%s' contains no data"),
+                             _("Image file “%s” contains no data"),
                              display_name);
                 g_free (display_name);
 		fclose (f);
@@ -204,7 +205,7 @@ gdk_pixbuf_animation_new_from_file (const gchar  *filename,
                         g_set_error (error,
                                      GDK_PIXBUF_ERROR,
                                      GDK_PIXBUF_ERROR_FAILED,
-                                     _("Failed to load animation '%s': reason not known, probably a corrupt animation file"),
+                                     _("Failed to load animation “%s”: reason not known, probably a corrupt animation file"),
                                      display_name);
                 }
 
@@ -272,7 +273,7 @@ fail_begin_load:
                         g_set_error (error,
                                      GDK_PIXBUF_ERROR,
                                      GDK_PIXBUF_ERROR_FAILED,
-                                     _("Failed to load image '%s': reason not known, probably a corrupt image file"),
+                                     _("Failed to load image “%s”: reason not known, probably a corrupt image file"),
                                      display_name);
                 }
 
@@ -296,7 +297,7 @@ fail_begin_load:
 #ifdef G_OS_WIN32
 /**
  * gdk_pixbuf_animation_new_from_file_utf8:
- * @filename: Name of file to load, in the GLib file name encoding
+ * @filename: (type filename): Name of file to load, in the GLib file name encoding
  * @error: return location for error
  *
  * Same as gdk_pixbuf_animation_new_from_file()

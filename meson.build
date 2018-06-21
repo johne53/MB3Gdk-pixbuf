@@ -1,14 +1,14 @@
 project('gdk-pixbuf', 'c',
-        version: '2.36.9',
+        version: '2.36.12',
         license: 'LGPLv2.1+',
         default_options: [
           'buildtype=debugoptimized',
           'warning_level=1',
           'c_std=c99',
         ],
-        meson_version: '>= 0.40.1')
+        meson_version: '>= 0.43.0')
 
-add_project_arguments([ '-D_POSIX_C_SOURCE', '-D_DEFAULT_SOURCE' ], language: 'c')
+add_project_arguments([ '-D_POSIX_C_SOURCE=200809L', '-D_DEFAULT_SOURCE', '-D_XOPEN_SOURCE' ], language: 'c')
 
 cc = meson.get_compiler('c')
 host_system = host_machine.system()
@@ -214,9 +214,9 @@ endif
 enabled_loaders = []
 loaders_deps = []
 
-if get_option('enable_png')
+if get_option('png')
   # We have a vast selection of libpng versions to choose from
-  foreach png: [ 'libpng16', 'libpng15', 'libpng14', 'libpng12', 'libpng13', 'libpng10' ]
+  foreach png: [ 'libpng16', 'libpng15', 'libpng14', 'libpng13', 'libpng12', 'libpng10' ]
     if not enabled_loaders.contains('png')
       png_dep = dependency(png, required: false)
       if png_dep.found()
@@ -225,19 +225,61 @@ if get_option('enable_png')
       endif
     endif
   endforeach
-endif
 
-if get_option('enable_tiff')
-  tiff_dep = dependency('libtiff-4', required: false)
-  if tiff_dep.found()
-    enabled_loaders += 'tiff'
-    loaders_deps += tiff_dep
+  if not enabled_loaders.contains('png')
+    if cc.get_id() == 'msvc' and cc.has_header('png.h')
+      # MSVC: First look for the DLL + import .lib build of libpng,
+      # which is normally libpngxx.lib, when libpng's pkg-config can't
+      # be found, which is quite normal on MSVC.
+      foreach png: [ 'libpng16', 'libpng15', 'libpng14', 'libpng12', 'libpng13', 'libpng10' ]
+        if not enabled_loaders.contains('png')
+          png_dep = cc.find_library(png, required: false)
+          if png_dep.found()
+            enabled_loaders += 'png'
+            loaders_deps += png_dep
+          endif
+        endif
+      endforeach
+
+      # If we still can't find libpng, try looking for the static libpng.lib,
+      # which means we need to ensure we have the static zlib .lib as well
+      if not enabled_loaders.contains('png')
+        png_dep = cc.find_library('libpng', required: false)
+        zlib_dep = cc.find_library('zlib', required: false)
+        if png_dep.found() and zlib_dep.found()
+          enabled_loaders += 'png'
+          loaders_deps += [ png_dep, zlib_dep ]
+        endif
+      endif
+    endif
   endif
 endif
 
-if get_option('enable_jpeg')
+# On Windows, check whether we are building the native Windows loaders
+# (it is an "all-or-nothing" option for BMP, EMF, GIF, ICO, JPEG, TIFF and WMF)
+# Note that we currently do not use the native Windows loaders to handle PNG and
+# JPEG2000 images
+if host_system == 'windows'
+  native_windows_loaders = get_option('native_windows_loaders')
+else
+  native_windows_loaders = false
+endif
+
+if native_windows_loaders
+  loaders_deps += cc.find_library('gdiplus')
+  loaders_deps += cc.find_library('ole32')
+  enabled_loaders += 'gdiplus'
+endif
+
+# Don't check and build the jpeg loader if native_windows_loaders is true
+if get_option('jpeg') and not native_windows_loaders
   if cc.has_header('jpeglib.h')
     jpeg_dep = cc.find_library('jpeg', required: false)
+    if cc.get_id() == 'msvc' and not jpeg_dep.found()
+      # The IJG JPEG library builds the .lib file as libjpeg.lib in its MSVC build system,
+      # so look for it as well when jpeg.lib cannot be found
+      jpeg_dep = cc.find_library('libjpeg', required: false)
+    endif
     if jpeg_dep.found() and cc.has_function('jpeg_destroy_decompress', dependencies: jpeg_dep)
       enabled_loaders += 'jpeg'
       loaders_deps += jpeg_dep
@@ -248,9 +290,51 @@ if get_option('enable_jpeg')
   endif
 endif
 
-if get_option('enable_jasper')
-  if cc.has_header('jasper/jasper.h')
+# Don't check and build the tiff loader if native_windows_loaders is true
+if get_option('tiff') and not native_windows_loaders
+  tiff_dep = dependency('libtiff-4', required: false)
+  if not tiff_dep.found()
+    # Fallback when no pkg-config file is found for libtiff on MSVC, which is quite normal
+    if cc.get_id() == 'msvc' and cc.has_header('tiff.h')
+      # First look for the DLL builds of libtiff, then the static builds
+      tiff_dep = cc.find_library('libtiff_i', required: false)
+
+      if not tiff_dep.found()
+        # For the static lib, zlib and libjpeg .lib's have been looked for first, and
+        # they are optional for libtiff
+        tiff_dep = cc.find_library('libtiff', required: false)
+      endif
+    endif
+  endif
+  if tiff_dep.found()
+    enabled_loaders += 'tiff'
+    loaders_deps += tiff_dep
+  endif
+endif
+
+jasper_extra_cflags = []
+
+if get_option('jasper')
+  has_jasper_header = false
+
+  if cc.get_id() == 'msvc'
+    # We must define JAS_WIN_MSVC_BUILD before including jasper/jasper.h on MSVC
+    jasper_msvc_macro = 'JAS_WIN_MSVC_BUILD'
+    has_jasper_header = cc.has_header('jasper/jasper.h', prefix: '#define @0@'.format(jasper_msvc_macro))
+    jasper_extra_cflags = [ '-D@0@'.format(jasper_msvc_macro) ]
+  else
+    has_jasper_header = cc.has_header('jasper/jasper.h')
+  endif
+
+  if has_jasper_header
     jasper_dep = cc.find_library('jasper', required: false)
+    if not jasper_dep.found()
+      if cc.get_id() == 'msvc'
+        # on MSVC, we need to look for libjasper.lib if jasper.lib is not found,
+        # which corresponds to what libjasper's MSVC projects produce
+        jasper_dep = cc.find_library('libjasper', required: false)
+      endif
+    endif
     if jasper_dep.found() and cc.has_function('jas_init', dependencies: jasper_dep)
       enabled_loaders += 'jasper'
       loaders_deps += jasper_dep
@@ -263,7 +347,7 @@ endif
 if host_system == 'windows'
   relocatable = true
 else
-  relocatable = get_option('enable_relocatable')
+  relocatable = get_option('relocatable')
 endif
 
 if relocatable
@@ -304,10 +388,11 @@ gnome = import('gnome')
 
 subdir('gdk-pixbuf')
 
-# X11
-x11_dep = dependency('x11', required: false)
-if x11_dep.found()
-  subdir('contrib/gdk-pixbuf-xlib')
+if get_option('x11')
+  x11_dep = cc.find_library('X11', required: false)
+    if x11_dep.found()
+      subdir('contrib/gdk-pixbuf-xlib')
+    endif
 endif
 
 # i18n

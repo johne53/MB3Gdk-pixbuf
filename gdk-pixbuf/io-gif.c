@@ -508,6 +508,14 @@ gif_lzw_fill_buffer (GifContext *context)
 		return -2;
 	}
 
+	if (context->code_last_byte < 2) {
+		g_set_error_literal (context->error,
+				     GDK_PIXBUF_ERROR,
+				     GDK_PIXBUF_ERROR_CORRUPT_IMAGE,
+				     _("Bad code encountered"));
+		return -2;
+	}
+
 	context->block_buf[0] = context->block_buf[context->code_last_byte - 2];
 	context->block_buf[1] = context->block_buf[context->code_last_byte - 1];
 
@@ -851,13 +859,29 @@ gif_get_lzw (GifContext *context)
                                 pixels[2] = 0;
                                 pixels[3] = 0;
                         }
-                } else
-                        context->frame->pixbuf =
-                                gdk_pixbuf_new (GDK_COLORSPACE_RGB,
-                                                TRUE,
-                                                8,
-                                                context->frame_len,
-                                                context->frame_height);
+                } else {
+                        int rowstride;
+                        guint64 len;
+
+                        rowstride = gdk_pixbuf_calculate_rowstride (GDK_COLORSPACE_RGB,
+                                                                    TRUE,
+                                                                    8,
+                                                                    context->frame_len,
+                                                                    context->frame_height);
+                        if (rowstride > 0 &&
+                            g_uint64_checked_mul (&len, rowstride, context->frame_height) &&
+                            len <= G_MAXINT) {
+                                context->frame->pixbuf =
+                                        gdk_pixbuf_new (GDK_COLORSPACE_RGB,
+                                                        TRUE,
+                                                        8,
+                                                        context->frame_len,
+                                                        context->frame_height);
+                        } else {
+                                context->frame->pixbuf = NULL;
+                        }
+                }
+
                 if (!context->frame->pixbuf) {
                         g_free (context->frame);
                         g_set_error_literal (context->error,
@@ -1141,7 +1165,12 @@ gif_prepare_lzw (GifContext *context)
 	context->lzw_fresh = TRUE;
 	context->code_curbit = 0;
 	context->code_lastbit = 0;
-	context->code_last_byte = 0;
+	/* During initialistion (in gif_lzw_fill_buffer) we substract 2 from
+	 * this value to peek into a buffer.
+	 * In order to not get a negative array index later, we set the value
+	 * to that magic 2 now.
+	 */
+	context->code_last_byte = 2;
 	context->code_done = FALSE;
 
         g_assert (context->lzw_clear_code <= 

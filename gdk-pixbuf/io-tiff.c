@@ -41,6 +41,7 @@
 #ifdef G_OS_WIN32
 #include <fcntl.h>
 #include <io.h>
+#include <Windows.h>
 #define lseek(a,b,c) _lseek(a,b,c)
 #define O_RDWR _O_RDWR
 #endif
@@ -315,7 +316,7 @@ tiff_image_parse (TIFF *tiff, TiffContext *context, GError **error)
 static GdkPixbuf *
 gdk_pixbuf__tiff_image_load (FILE *f, GError **error)
 {
-        TIFF *tiff;
+        TIFF *tiff = NULL;
         int fd;
         GdkPixbuf *pixbuf;
         
@@ -331,7 +332,30 @@ gdk_pixbuf__tiff_image_load (FILE *f, GError **error)
          * before using it. (#60840)
          */
         lseek (fd, 0, SEEK_SET);
+#ifndef G_OS_WIN32
         tiff = TIFFFdOpen (fd, "libpixbuf-tiff", "r");
+#else
+        /* W32 version of this function takes HANDLE.
+         * What's worse, the caller will close the file,
+         * but TIFFClose() will *also* close it, so we
+         * need to make a duplicate.
+         */
+        {
+                HANDLE h;
+
+                if (DuplicateHandle (GetCurrentProcess (),
+                                     (HANDLE) _get_osfhandle (fd),
+                                     GetCurrentProcess (),
+                                     &h,
+                                     0,
+                                     FALSE,
+                                     DUPLICATE_SAME_ACCESS)) {
+                        tiff = TIFFFdOpen ((intptr_t) h, "libpixbuf-tiff", "r");
+                        if (tiff == NULL)
+                                CloseHandle (h);
+                }
+        }
+#endif
 
         if (!tiff) {
                 g_set_error_literal (error,
@@ -505,8 +529,15 @@ make_available_at_least (TiffContext *context, guint needed)
         need_alloc = context->used + needed;
         if (need_alloc > context->allocated) {
                 guint new_size = 1;
-                while (new_size < need_alloc)
-                        new_size *= 2;
+                while (new_size < need_alloc) {
+                        if (!g_uint_checked_mul (&new_size, new_size, 2)) {
+                                new_size = 0;
+                                break;
+                        }
+                }
+
+                if (new_size == 0)
+                        return FALSE;
 
                 new_buffer = g_try_realloc (context->buffer, new_size);
                 if (new_buffer) {
@@ -769,7 +800,7 @@ gdk_pixbuf__tiff_image_save_to_callback (GdkPixbufSaveFunc   save_func,
                 g_set_error_literal (error,
                                      GDK_PIXBUF_ERROR,
                                      GDK_PIXBUF_ERROR_FAILED,
-                                     _("TIFF compression doesn't refer to a valid codec."));
+                                     _("TIFF compression doesn’t refer to a valid codec."));
                 retval = FALSE;
                 goto cleanup;
         }
@@ -814,7 +845,7 @@ gdk_pixbuf__tiff_image_save_to_callback (GdkPixbufSaveFunc   save_func,
                 g_set_error_literal (error,
                                      GDK_PIXBUF_ERROR,
                                      GDK_PIXBUF_ERROR_FAILED,
-                                     _("TIFF bits-per-sample doesn't contain a supported value."));
+                                     _("TIFF bits-per-sample doesn’t contain a supported value."));
                 retval = FALSE;
                 goto cleanup;
          }
@@ -913,7 +944,7 @@ gdk_pixbuf__tiff_image_save_to_callback (GdkPixbufSaveFunc   save_func,
                     g_set_error (error,
                                  GDK_PIXBUF_ERROR,
                                  GDK_PIXBUF_ERROR_BAD_OPTION,
-                                 _("TIFF x-dpi must be greater than zero; value '%s' is not allowed."),
+                                 _("TIFF x-dpi must be greater than zero; value “%s” is not allowed."),
                                  x_dpi);
                     retval = FALSE;
                     goto cleanup;
@@ -925,7 +956,7 @@ gdk_pixbuf__tiff_image_save_to_callback (GdkPixbufSaveFunc   save_func,
                     g_set_error (error,
                                  GDK_PIXBUF_ERROR,
                                  GDK_PIXBUF_ERROR_BAD_OPTION,
-                                 _("TIFF y-dpi must be greater than zero; value '%s' is not allowed."),
+                                 _("TIFF y-dpi must be greater than zero; value “%s” is not allowed."),
                                  y_dpi);
                     retval = FALSE;
                     goto cleanup;
@@ -966,7 +997,7 @@ save_to_file_cb (const gchar *buf,
 		g_set_error_literal (error,
                                      GDK_PIXBUF_ERROR,
                                      GDK_PIXBUF_ERROR_FAILED,
-                                     _("Couldn't write to TIFF file"));
+                                     _("Couldn’t write to TIFF file"));
 		return FALSE;
 	}
 	

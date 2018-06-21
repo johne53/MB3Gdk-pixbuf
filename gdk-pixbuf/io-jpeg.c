@@ -100,7 +100,8 @@ static gboolean gdk_pixbuf__jpeg_image_stop_load (gpointer context, GError **err
 static gboolean gdk_pixbuf__jpeg_image_load_increment(gpointer context,
                                                       const guchar *buf, guint size,
                                                       GError **error);
-
+static gboolean gdk_pixbuf__jpeg_image_load_lines (JpegProgContext  *context,
+                                                   GError          **error);
 
 static void
 fatal_error_handler (j_common_ptr cinfo)
@@ -814,7 +815,7 @@ gdk_pixbuf__jpeg_image_begin_load (GdkPixbufModuleSizeFunc size_func,
 		g_set_error_literal (error,
                                      GDK_PIXBUF_ERROR,
                                      GDK_PIXBUF_ERROR_INSUFFICIENT_MEMORY,
-                                     _("Couldn't allocate memory for loading JPEG file"));
+                                     _("Couldn’t allocate memory for loading JPEG file"));
 		return NULL;
 	}
 	memset (context->cinfo.src, 0, sizeof (my_source_mgr));
@@ -842,10 +843,33 @@ static gboolean
 gdk_pixbuf__jpeg_image_stop_load (gpointer data, GError **error)
 {
 	JpegProgContext *context = (JpegProgContext *) data;
+	struct           jpeg_decompress_struct *cinfo;
         gboolean retval;
 
 	g_return_val_if_fail (context != NULL, TRUE);
-	
+
+	cinfo = &context->cinfo;
+
+	context->jerr.error = error;
+	if (!sigsetjmp (context->jerr.setjmp_buffer, 1)) {
+		/* Try to finish loading truncated files */
+		if (context->pixbuf &&
+		    cinfo->output_scanline < cinfo->output_height) {
+			my_src_ptr src = (my_src_ptr) cinfo->src;
+
+			/* But only if there's enough buffer space left */
+			if (src->skip_next < sizeof(src->buffer) - 2) {
+				/* Insert a fake EOI marker */
+				src->buffer[src->skip_next] = (JOCTET) 0xFF;
+				src->buffer[src->skip_next + 1] = (JOCTET) JPEG_EOI;
+				src->pub.next_input_byte = src->buffer + src->skip_next;
+				src->pub.bytes_in_buffer = 2;
+
+				gdk_pixbuf__jpeg_image_load_lines (context, NULL);
+			}
+		}
+	}
+
         /* FIXME this thing needs to report errors if
          * we have unused image data
          */
@@ -858,15 +882,14 @@ gdk_pixbuf__jpeg_image_stop_load (gpointer data, GError **error)
 	if (sigsetjmp (context->jerr.setjmp_buffer, 1)) {
                 retval = FALSE;
 	} else {
-		jpeg_finish_decompress (&context->cinfo);
+		jpeg_finish_decompress (cinfo);
                 retval = TRUE;
 	}
 
         jpeg_destroy_decompress (&context->cinfo);
 
-	if (context->cinfo.src) {
-		my_src_ptr src = (my_src_ptr) context->cinfo.src;
-		
+	if (cinfo->src) {
+		my_src_ptr src = (my_src_ptr) cinfo->src;
 		g_free (src);
 	}
 
@@ -1113,7 +1136,7 @@ gdk_pixbuf__jpeg_image_load_increment (gpointer data,
                                 g_set_error_literal (error,
                                                      GDK_PIXBUF_ERROR,
                                                      GDK_PIXBUF_ERROR_INSUFFICIENT_MEMORY,
-                                                     _("Couldn't allocate memory for loading JPEG file"));
+                                                     _("Couldn’t allocate memory for loading JPEG file"));
                                 retval = FALSE;
 				goto out;
 			}
@@ -1354,7 +1377,7 @@ real_save_jpeg (GdkPixbuf          *pixbuf,
                                        g_set_error (error,
                                                     GDK_PIXBUF_ERROR,
                                                     GDK_PIXBUF_ERROR_BAD_OPTION,
-                                                    _("JPEG quality must be a value between 0 and 100; value '%s' could not be parsed."),
+                                                    _("JPEG quality must be a value between 0 and 100; value “%s” could not be parsed."),
                                                     *viter);
 
                                        retval = FALSE;
@@ -1370,7 +1393,7 @@ real_save_jpeg (GdkPixbuf          *pixbuf,
                                        g_set_error (error,
                                                     GDK_PIXBUF_ERROR,
                                                     GDK_PIXBUF_ERROR_BAD_OPTION,
-                                                    _("JPEG quality must be a value between 0 and 100; value '%d' is not allowed."),
+                                                    _("JPEG quality must be a value between 0 and 100; value “%d” is not allowed."),
                                                     quality);
 
                                        retval = FALSE;
@@ -1391,7 +1414,7 @@ real_save_jpeg (GdkPixbuf          *pixbuf,
                                        g_set_error (error,
                                                     GDK_PIXBUF_ERROR,
                                                     GDK_PIXBUF_ERROR_BAD_OPTION,
-                                                    _("JPEG x-dpi must be a value between 1 and 65535; value '%s' is not allowed."),
+                                                    _("JPEG x-dpi must be a value between 1 and 65535; value “%s” is not allowed."),
                                                     *viter);
 
                                        retval = FALSE;
@@ -1412,7 +1435,7 @@ real_save_jpeg (GdkPixbuf          *pixbuf,
                                        g_set_error (error,
                                                     GDK_PIXBUF_ERROR,
                                                     GDK_PIXBUF_ERROR_BAD_OPTION,
-                                                    _("JPEG y-dpi must be a value between 1 and 65535; value '%s' is not allowed."),
+                                                    _("JPEG y-dpi must be a value between 1 and 65535; value “%s” is not allowed."),
                                                     *viter);
 
                                        retval = FALSE;
@@ -1426,7 +1449,7 @@ real_save_jpeg (GdkPixbuf          *pixbuf,
                                        g_set_error (error,
                                                     GDK_PIXBUF_ERROR,
                                                     GDK_PIXBUF_ERROR_BAD_OPTION,
-                                                    _("Color profile has invalid length '%u'."),
+                                                    _("Color profile has invalid length “%u”."),
                                                     (guint) icc_profile_size);
                                        retval = FALSE;
                                        goto cleanup;
@@ -1461,7 +1484,7 @@ real_save_jpeg (GdkPixbuf          *pixbuf,
 	       g_set_error_literal (error,
                                     GDK_PIXBUF_ERROR,
                                     GDK_PIXBUF_ERROR_INSUFFICIENT_MEMORY,
-                                    _("Couldn't allocate memory for loading JPEG file"));
+                                    _("Couldn’t allocate memory for loading JPEG file"));
 	       retval = FALSE;
 	       goto cleanup;
        }
@@ -1471,7 +1494,7 @@ real_save_jpeg (GdkPixbuf          *pixbuf,
 		       g_set_error_literal (error,
                                             GDK_PIXBUF_ERROR,
                                             GDK_PIXBUF_ERROR_INSUFFICIENT_MEMORY,
-                                            _("Couldn't allocate memory for loading JPEG file"));
+                                            _("Couldn’t allocate memory for loading JPEG file"));
 		       retval = FALSE;
 		       goto cleanup;
 	       }
