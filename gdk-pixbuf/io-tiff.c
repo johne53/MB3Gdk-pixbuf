@@ -332,7 +332,7 @@ gdk_pixbuf__tiff_image_load (FILE *f, GError **error)
          * before using it. (#60840)
          */
         lseek (fd, 0, SEEK_SET);
-#ifndef G_OS_WIN32
+#if ((!defined(G_OS_WIN32)) || (defined (AVOID_WIN32_FILEIO)))  /* AVOID_WIN32_FILEIO added by JE - 23-09-2018. */
         tiff = TIFFFdOpen (fd, "libpixbuf-tiff", "r");
 #else
         /* W32 version of this function takes HANDLE.
