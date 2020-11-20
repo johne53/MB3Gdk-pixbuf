@@ -1,0 +1,171 @@
+<?xml version="1.0" encoding="utf-8"?>
+<Project DefaultTargets="Build" ToolsVersion="15.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+  <ItemGroup Label="ProjectConfigurations">
+    <ProjectConfiguration Include="Debug|x64">
+      <Configuration>Debug</Configuration>
+      <Platform>x64</Platform>
+    </ProjectConfiguration>
+    <ProjectConfiguration Include="Release with Debugging Capability|x64">
+      <Configuration>Release with Debugging Capability</Configuration>
+      <Platform>x64</Platform>
+    </ProjectConfiguration>
+    <ProjectConfiguration Include="Release|x64">
+      <Configuration>Release</Configuration>
+      <Platform>x64</Platform>
+    </ProjectConfiguration>
+  </ItemGroup>
+  <PropertyGroup Label="Globals">
+    <ProjectGuid>{D0BA1C8F-5DCA-4481-83D2-D520F13592C4}</ProjectGuid>
+    <RootNamespace>static-pixbufloader_tga</RootNamespace>
+    <WindowsTargetPlatformVersion>8.1</WindowsTargetPlatformVersion>
+  </PropertyGroup>
+  <Import Project="$(VCTargetsPath)\Microsoft.Cpp.Default.props" />
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release with Debugging Capability|x64'" Label="Configuration">
+    <ConfigurationType>StaticLibrary</ConfigurationType>
+    <PlatformToolset>v142</PlatformToolset>
+    <UseOfMfc>false</UseOfMfc>
+    <CharacterSet>MultiByte</CharacterSet>
+  </PropertyGroup>
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|x64'" Label="Configuration">
+    <ConfigurationType>StaticLibrary</ConfigurationType>
+    <PlatformToolset>v142</PlatformToolset>
+    <UseOfMfc>false</UseOfMfc>
+    <CharacterSet>MultiByte</CharacterSet>
+    <WholeProgramOptimization>true</WholeProgramOptimization>
+  </PropertyGroup>
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x64'" Label="Configuration">
+    <ConfigurationType>StaticLibrary</ConfigurationType>
+    <PlatformToolset>v142</PlatformToolset>
+    <UseOfMfc>false</UseOfMfc>
+    <CharacterSet>MultiByte</CharacterSet>
+    <UseDebugLibraries>true</UseDebugLibraries>
+  </PropertyGroup>
+  <Import Project="$(VCTargetsPath)\Microsoft.Cpp.props" />
+  <ImportGroup Label="ExtensionSettings">
+  </ImportGroup>
+  <ImportGroup Condition="'$(Configuration)|$(Platform)'=='Release with Debugging Capability|x64'" Label="PropertySheets">
+    <Import Project="$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props" Condition="exists('$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props')" Label="LocalAppDataPlatform" />
+    <Import Project="$(VCTargetsPath)Microsoft.CPP.UpgradeFromVC60.props" />
+    <Import Project="gdk-pixbuf.props" />
+  </ImportGroup>
+  <ImportGroup Condition="'$(Configuration)|$(Platform)'=='Release|x64'" Label="PropertySheets">
+    <Import Project="$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props" Condition="exists('$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props')" Label="LocalAppDataPlatform" />
+    <Import Project="$(VCTargetsPath)Microsoft.CPP.UpgradeFromVC60.props" />
+    <Import Project="gdk-pixbuf.props" />
+  </ImportGroup>
+  <ImportGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x64'" Label="PropertySheets">
+    <Import Project="$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props" Condition="exists('$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props')" Label="LocalAppDataPlatform" />
+    <Import Project="$(VCTargetsPath)Microsoft.CPP.UpgradeFromVC60.props" />
+    <Import Project="gdk-pixbuf.props" />
+  </ImportGroup>
+  <PropertyGroup Label="UserMacros" />
+  <PropertyGroup>
+    <_ProjectFileVersion>16.0.30523.133</_ProjectFileVersion>
+  </PropertyGroup>
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">
+    <OutDir>$(ProjectDir)$(Platform)\$(Configuration)\bin\</OutDir>
+    <IntDir>$(ProjectDir)$(Platform)\$(Configuration)\obj\$(ProjectName)\</IntDir>
+    <TargetName>$(ProjectName)64$(LibSuffix)D</TargetName>
+  </PropertyGroup>
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|x64'">
+    <OutDir>$(ProjectDir)$(Platform)\$(Configuration)\bin\</OutDir>
+    <IntDir>$(ProjectDir)$(Platform)\$(Configuration)\obj\$(ProjectName)\</IntDir>
+    <TargetName>$(ProjectName)64$(LibSuffix)</TargetName>
+  </PropertyGroup>
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release with Debugging Capability|x64'">
+    <OutDir>$(ProjectDir)$(Platform)\$(Configuration)\bin\</OutDir>
+    <IntDir>$(ProjectDir)$(Platform)\$(Configuration)\obj\$(ProjectName)\</IntDir>
+    <TargetName>$(ProjectName)64$(LibSuffix)RDC</TargetName>
+  </PropertyGroup>
+  <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">
+    <ClCompile>
+      <AdditionalOptions>/FI$(TargetSxsFolder)\targetsxs.h %(AdditionalOptions)</AdditionalOptions>
+      <Optimization>Disabled</Optimization>
+      <AdditionalIncludeDirectories>.;$(GenericIncludeFolder)\gtk-2.0;$(GenericIncludeFolder);$(GenericIncludeFolder)\cairo;$(GenericIncludeFolder)\pango-1.0;$(GenericIncludeFolder)\gtk-2.0\gdk;$(GenericIncludeFolder)\atk-1.0;$(GenericLibraryFolder)\gtk-2.0\include;$(GenericLibraryFolder)\glib-2.0\include;..;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <PreprocessorDefinitions>GTK_HOST="win64";GTK_PREFIX="Not set (placeholder)";GTK_LIBDIR="Not set (placeholder)";GTK_PRINT_BACKENDS="file,lpr";GTK_PRINT_PREVIEW_COMMAND="evince --unlink-tempfile --preview %f";WIN32;_WIN64;DEBUG;_DEBUG;_LIB;_CRT_SECURE_NO_WARNINGS;_WINDOWS;G_OS_WIN32;HAVE_CONFIG_H;HAVE_ROUND;ENABLE_NLS=1;GDK_PIXBUF_ENABLE_BACKEND;GTK_PRINT_BACKEND_ENABLE_UNSUPPORTED;G_LOG_DOMAIN="Gdk";GDK_COMPILATION;INCLUDE_tga;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <MinimalRebuild>true</MinimalRebuild>
+      <BasicRuntimeChecks>EnableFastChecks</BasicRuntimeChecks>
+      <RuntimeLibrary>MultiThreadedDebugDLL</RuntimeLibrary>
+      <RuntimeTypeInfo>false</RuntimeTypeInfo>
+      <PrecompiledHeaderOutputFile />
+      <WarningLevel>Level3</WarningLevel>
+      <SuppressStartupBanner>true</SuppressStartupBanner>
+      <DebugInformationFormat>ProgramDatabase</DebugInformationFormat>
+      <CompileAs>CompileAsC</CompileAs>
+      <ForcedIncludeFiles>$(TargetSxsFolder)\targetsxs.h;%(ForcedIncludeFiles)</ForcedIncludeFiles>
+      <StringPooling>false</StringPooling>
+    </ClCompile>
+    <ResourceCompile>
+      <PreprocessorDefinitions>_DEBUG;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <Culture>0x0809</Culture>
+    </ResourceCompile>
+    <Lib>
+      <SuppressStartupBanner>true</SuppressStartupBanner>
+    </Lib>
+    <Bscmake>
+      <SuppressStartupBanner>true</SuppressStartupBanner>
+      <OutputFile>.\Debug\libstatic_pixbufloader_tga/libstatic_pixbufloader_tga.bsc</OutputFile>
+    </Bscmake>
+  </ItemDefinitionGroup>
+  <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Release|x64'">
+    <ClCompile>
+      <AdditionalOptions>/FI$(TargetSxsFolder)\targetsxs.h %(AdditionalOptions)</AdditionalOptions>
+      <Optimization>MaxSpeed</Optimization>
+      <InlineFunctionExpansion>OnlyExplicitInline</InlineFunctionExpansion>
+      <AdditionalIncludeDirectories>.;$(GenericIncludeFolder)\gtk-2.0;$(GenericIncludeFolder);$(GenericIncludeFolder)\cairo;$(GenericIncludeFolder)\pango-1.0;$(GenericIncludeFolder)\gtk-2.0\gdk;$(GenericIncludeFolder)\atk-1.0;$(GenericLibraryFolder)\gtk-2.0\include;$(GenericLibraryFolder)\glib-2.0\include;..;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <PreprocessorDefinitions>_SECURE_SCL=0;GTK_HOST="win64";GTK_PREFIX="Not set (placeholder)";GTK_LIBDIR="Not set (placeholder)";GTK_PRINT_BACKENDS="file,lpr";GTK_PRINT_PREVIEW_COMMAND="evince --unlink-tempfile --preview %f";WIN32;_WIN64;NDEBUG;_LIB;_CRT_SECURE_NO_WARNINGS;_WINDOWS;G_OS_WIN32;HAVE_CONFIG_H;HAVE_ROUND;ENABLE_NLS=1;GDK_PIXBUF_ENABLE_BACKEND;GTK_PRINT_BACKEND_ENABLE_UNSUPPORTED;G_LOG_DOMAIN="Gdk";GDK_COMPILATION;INCLUDE_tga;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <StringPooling>false</StringPooling>
+      <RuntimeLibrary>MultiThreadedDLL</RuntimeLibrary>
+      <RuntimeTypeInfo>false</RuntimeTypeInfo>
+      <PrecompiledHeaderOutputFile />
+      <WarningLevel>Level3</WarningLevel>
+      <CompileAs>CompileAsC</CompileAs>
+      <ForcedIncludeFiles>$(TargetSxsFolder)\targetsxs.h;%(ForcedIncludeFiles)</ForcedIncludeFiles>
+      <BufferSecurityCheck>false</BufferSecurityCheck>
+    </ClCompile>
+    <ResourceCompile>
+      <PreprocessorDefinitions>NDEBUG;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <Culture>0x0809</Culture>
+    </ResourceCompile>
+    <Lib>
+      <SuppressStartupBanner>true</SuppressStartupBanner>
+    </Lib>
+    <Bscmake>
+      <SuppressStartupBanner>true</SuppressStartupBanner>
+      <OutputFile>.\Release\libstatic_pixbufloader_tga/libstatic_pixbufloader_tga.bsc</OutputFile>
+    </Bscmake>
+  </ItemDefinitionGroup>
+  <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Release with Debugging Capability|x64'">
+    <ClCompile>
+      <AdditionalOptions>/FI$(TargetSxsFolder)\targetsxs.h %(AdditionalOptions)</AdditionalOptions>
+      <Optimization>Disabled</Optimization>
+      <AdditionalIncludeDirectories>.;$(GenericIncludeFolder)\gtk-2.0;$(GenericIncludeFolder);$(GenericIncludeFolder)\cairo;$(GenericIncludeFolder)\pango-1.0;$(GenericIncludeFolder)\gtk-2.0\gdk;$(GenericIncludeFolder)\atk-1.0;$(GenericLibraryFolder)\gtk-2.0\include;$(GenericLibraryFolder)\glib-2.0\include;..;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <PreprocessorDefinitions>_SECURE_SCL=0;GTK_HOST="win64";GTK_PREFIX="Not set (placeholder)";GTK_LIBDIR="Not set (placeholder)";GTK_PRINT_BACKENDS="file,lpr";GTK_PRINT_PREVIEW_COMMAND="evince --unlink-tempfile --preview %f";WIN32;_WIN64;NDEBUG;_LIB;_CRT_SECURE_NO_WARNINGS;_WINDOWS;G_OS_WIN32;HAVE_CONFIG_H;HAVE_ROUND;ENABLE_NLS=1;GDK_PIXBUF_ENABLE_BACKEND;GTK_PRINT_BACKEND_ENABLE_UNSUPPORTED;G_LOG_DOMAIN="Gdk";GDK_COMPILATION;INCLUDE_tga;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <StringPooling>false</StringPooling>
+      <RuntimeLibrary>MultiThreadedDLL</RuntimeLibrary>
+      <RuntimeTypeInfo>false</RuntimeTypeInfo>
+      <PrecompiledHeaderOutputFile />
+      <WarningLevel>Level3</WarningLevel>
+      <DebugInformationFormat>ProgramDatabase</DebugInformationFormat>
+      <CompileAs>CompileAsC</CompileAs>
+      <ForcedIncludeFiles>$(TargetSxsFolder)\targetsxs.h;%(ForcedIncludeFiles)</ForcedIncludeFiles>
+    </ClCompile>
+    <ResourceCompile>
+      <PreprocessorDefinitions>NDEBUG;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <Culture>0x0809</Culture>
+    </ResourceCompile>
+    <Lib>
+      <SuppressStartupBanner>true</SuppressStartupBanner>
+    </Lib>
+    <Bscmake>
+      <SuppressStartupBanner>true</SuppressStartupBanner>
+      <OutputFile>.\Release\libstatic_pixbufloader_tga/libstatic_pixbufloader_tga.bsc</OutputFile>
+    </Bscmake>
+  </ItemDefinitionGroup>
+  <ItemGroup>
+    <ClCompile Include="..\gdk-pixbuf\io-tga.c" />
+  </ItemGroup>
+  <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
+  <ImportGroup Label="ExtensionTargets">
+  </ImportGroup>
+</Project>
