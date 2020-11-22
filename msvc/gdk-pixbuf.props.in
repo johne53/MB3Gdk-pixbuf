@@ -16,7 +16,6 @@
     <GdkPixbufDllSuffix>-@GDK_PIXBUF_API_VERSION@-@LT_CURRENT_MINUS_AGE@</GdkPixbufDllSuffix>
     <GlibBuildRootFolder>@GlibBuildRootFolder@</GlibBuildRootFolder>
     <GdkPixbufBuildRootFolder>@GdkPixbufBuildRootFolder@</GdkPixbufBuildRootFolder>
-    <GtkBuildRootFolder>@GtkBuildRootFolder@</GtkBuildRootFolder>
     <GenericIncludeFolder>@GenericIncludeFolder@</GenericIncludeFolder>
     <GenericLibraryFolder>@GenericLibraryFolder@</GenericLibraryFolder>
     <GenericWin32LibraryFolder>@GenericWin32LibraryFolder@</GenericWin32LibraryFolder>
