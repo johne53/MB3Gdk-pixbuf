@@ -1,12 +1,12 @@
 project('gdk-pixbuf', 'c',
-        version: '2.36.12',
+        version: '2.40.1',
         license: 'LGPLv2.1+',
         default_options: [
           'buildtype=debugoptimized',
           'warning_level=1',
           'c_std=c99',
         ],
-        meson_version: '>= 0.43.0')
+        meson_version: '>= 0.46.0')
 
 add_project_arguments([ '-D_POSIX_C_SOURCE=200809L', '-D_DEFAULT_SOURCE', '-D_XOPEN_SOURCE' ], language: 'c')
 
@@ -42,6 +42,7 @@ revision = gdk_pixbuf_interface_age
 libversion = '@0@.@1@.@2@'.format(soversion, current, revision)
 age = gdk_pixbuf_binary_age - gdk_pixbuf_interface_age
 current_minus_age = current - age
+darwin_versions = ['@0@'.format(current + 1), '@0@.@1@'.format(current + 1, gdk_pixbuf_interface_age)]
 
 # Paths
 gdk_pixbuf_prefix = get_option('prefix')
@@ -56,7 +57,14 @@ gdk_pixbuf_loaderdir = join_paths(gdk_pixbuf_libdir, 'gdk-pixbuf-@0@/@1@/loaders
 
 # Dependencies
 glib_req_version = '>= 2.38.0'
-gio_dep = dependency('gio-2.0', version: glib_req_version)
+glib_dep = dependency('glib-2.0', version: glib_req_version,
+                      fallback : ['glib', 'libglib_dep'])
+gobject_dep = dependency('gobject-2.0', version: glib_req_version,
+                         fallback : ['glib', 'libgobject_dep'])
+gmodule_dep = dependency('gmodule-no-export-2.0', version: glib_req_version,
+                         fallback : ['glib', 'libgmodule_dep'])
+gio_dep = dependency('gio-2.0', version: glib_req_version,
+                     fallback : ['glib', 'libgio_dep'])
 
 # Configurations
 gdk_pixbuf_conf = configuration_data()
@@ -85,16 +93,24 @@ if cc.has_function('lrint', dependencies: mathlib_dep)
   gdk_pixbuf_conf.set('HAVE_LRINT', 1)
 endif
 
+if cc.has_function('bind_textdomain_codeset', prefix: '#include <libintl.h>')
+  gdk_pixbuf_conf.set('HAVE_BIND_TEXTDOMAIN_CODESET', 1)
+endif
+
+if cc.has_function('setrlimit', prefix: '#include <sys/time.h>\n#include <sys/resource.h>')
+  gdk_pixbuf_conf.set('HAVE_SETRLIMIT', 1)
+endif
 
 # We use links() because sigsetjmp() is often a macro hidden behind other macros
 gdk_pixbuf_conf.set('HAVE_SIGSETJMP',
-                    cc.links('''#define _POSIX_SOURCE
-                                #include <setjmp.h>
-                                int main (void) {
-                                  sigjmp_buf env;
-                                  sigsetjmp (env, 0);
-                                  return 0;
-                                }''', name: 'sigsetjmp'))
+  cc.links('''#define _POSIX_SOURCE
+              #include <setjmp.h>
+              int main (void) {
+                sigjmp_buf env;
+                sigsetjmp (env, 0);
+                return 0;
+              }''', name: 'sigsetjmp'),
+)
 
 # Common compiler and linker flags
 common_cflags = []
@@ -160,45 +176,53 @@ if get_option('default_library') != 'static'
   endif
 endif
 
-foreach cflag: test_cflags
-  if cc.has_argument(cflag)
-    common_cflags += cflag
-  endif
-endforeach
+common_cflags += cc.get_supported_arguments(test_cflags)
 
-# Linker flags
 if host_machine.system() == 'linux'
-  ldflag_prog = 'int main (void) { return 0; }'
-  foreach ldflag: [ '-Wl,-Bsymbolic', '-Wl,-z,relro', '-Wl,-z,now', ]
-    if cc.links(ldflag_prog, args: ldflag, name: 'using @0@'.format(ldflag))
-      common_ldflags += ldflag
-    endif
-  endforeach
+  # Additional linker flags
+  test_ldflags = ['-Wl,-Bsymbolic', '-Wl,-z,relro', '-Wl,-z,now']
+  common_ldflags += cc.get_supported_link_arguments(test_ldflags)
+  gdk_pixbuf_conf.set('OS_LINUX', 1)
 endif
 
-# Maintain compatibility with autotools on macOS
 if host_machine.system() == 'darwin'
-  common_ldflags += [ '-compatibility_version 1', '-current_version 1.0', ]
+  # Maintain compatibility with autotools on macOS
+  common_ldflags += [ '-compatibility_version', darwin_versions[0], '-current_version', darwin_versions[1]]
+  gdk_pixbuf_conf.set('OS_DARWIN', 1)
 endif
-
-# Dependencies
-gobject_dep = dependency('gobject-2.0', version: glib_req_version)
-gmodule_dep = dependency('gmodule-no-export-2.0')
-gio_dep = dependency('gio-2.0')
 
 # On non-Windows/macOS systems we always required shared-mime-info and GIO
-if host_system != 'windows' and host_system != 'darwin'
-  shared_mime_dep = dependency('shared-mime-info')
+# shared_mime_dep = []
+shared_mime_dep = []
+if get_option('gio_sniffing') and host_system != 'windows' and host_system != 'darwin'
+  shared_mime_dep += dependency('shared-mime-info')
   gdk_pixbuf_conf.set('GDK_PIXBUF_USE_GIO_MIME', 1)
-else
-  shared_mime_dep = []
 endif
 
-gdk_pixbuf_deps = [ mathlib_dep, gobject_dep, gmodule_dep, gio_dep, shared_mime_dep ]
+# Check if medialib is available
+medialib_dep = cc.find_library('mlib', required: false)
+if medialib_dep.found()
+  if cc.has_function('mlib_ImageSetStruct', dependencies: medialib_dep)
+    gdk_pixbuf_conf.set('USE_MEDIALIB', 1)
+
+    if cc.has_function('mlib_VideoColorRGBint_to_BGRAint', dependencies: medialib_dep)
+      gdk_pixbuf_conf.set('USE_MEDIALIB25', 1)
+    endif
+  else
+    medialib_dep = []
+  endif
+endif
+
+gdk_pixbuf_deps = [ mathlib_dep, glib_dep, gobject_dep, gmodule_dep, gio_dep,
+                    shared_mime_dep, medialib_dep ]
 
 # Check if we can build shared modules
-build_modules = gmodule_dep.get_pkgconfig_variable('gmodule_supported') == 'true'
-gdk_pixbuf_conf.set10('USE_GMODULE', build_modules)
+if gmodule_dep.type_name() == 'pkgconfig'
+  build_modules = gmodule_dep.get_pkgconfig_variable('gmodule_supported') == 'true'
+else
+  build_modules = subproject('glib').get_variable('g_module_impl') != '0'
+endif
+gdk_pixbuf_conf.set('USE_GMODULE', build_modules)
 
 # Check which loaders should be built into gdk-pixbuf
 builtin_loaders = get_option('builtin_loaders').split(',')
@@ -252,6 +276,18 @@ if get_option('png')
         endif
       endif
     endif
+
+    # Finally, look for the dependency in a fallback subproject if allowed by
+    # the --wrap-mode option. We don't directly call subproject() here because
+    # that will bypass --wrap-mode and cause issues for distro packagers.
+    # See: https://mesonbuild.com/Reference-manual.html#dependency
+    if not png_dep.found()
+      png_dep = dependency('', required: false, fallback: ['libpng', 'png_dep'])
+      if png_dep.found()
+        enabled_loaders += 'png'
+        loaders_deps += png_dep
+      endif
+    endif
   endif
 endif
 
@@ -285,7 +321,8 @@ if get_option('jpeg') and not native_windows_loaders
       loaders_deps += jpeg_dep
 
       gdk_pixbuf_conf.set('HAVE_PROGRESSIVE_JPEG',
-                          cc.has_function('jpeg_simple_progression', dependencies: jpeg_dep))
+                          cc.has_function('jpeg_simple_progression',
+                                          dependencies: jpeg_dep))
     endif
   endif
 endif
@@ -357,25 +394,7 @@ endif
 gdk_pixbuf_conf.set_quoted('GETTEXT_PACKAGE', meson.project_name())
 
 configure_file(output: 'config.h', configuration: gdk_pixbuf_conf)
-
-# Compat variables for pkgconfig
-pkgconf = configuration_data()
-pkgconf.set('prefix', gdk_pixbuf_prefix)
-pkgconf.set('exec_prefix', gdk_pixbuf_prefix)
-pkgconf.set('libdir', gdk_pixbuf_libdir)
-pkgconf.set('includedir', gdk_pixbuf_includedir)
-pkgconf.set('GDK_PIXBUF_API_VERSION', gdk_pixbuf_api_version)
-pkgconf.set('GDK_PIXBUF_BINARY_VERSION', gdk_pixbuf_binary_version)
-pkgconf.set('GDK_PIXBUF_EXTRA_CFLAGS', '')
-pkgconf.set('GDK_PIXBUF_EXTRA_LIBS', '')
-pkgconf.set('PNG_DEP_CFLAGS_PACKAGES', '')
-pkgconf.set('VERSION', meson.project_version())
-
-configure_file(input: 'gdk-pixbuf-2.0.pc.in',
-               output: 'gdk-pixbuf-2.0.pc',
-               configuration: pkgconf,
-               install: true,
-               install_dir: join_paths(gdk_pixbuf_libdir, 'pkgconfig'))
+add_project_arguments([ '-DHAVE_CONFIG_H=1' ], language: 'c')
 
 root_inc = include_directories('.')
 
@@ -388,18 +407,57 @@ gnome = import('gnome')
 
 subdir('gdk-pixbuf')
 
+gdkpixbuf_xlib_inc = []
 if get_option('x11')
-  x11_dep = cc.find_library('X11', required: false)
-    if x11_dep.found()
-      subdir('contrib/gdk-pixbuf-xlib')
-    endif
+  x11_dep = dependency('x11')
+  subdir('contrib/gdk-pixbuf-xlib')
 endif
 
 # i18n
 subdir('po')
 
-subdir('tests')
-subdir('thumbnailer')
+if not meson.is_cross_build()
+  subdir('tests')
+  subdir('thumbnailer')
+endif
 
 # Documentation
-subdir('docs/reference/gdk-pixbuf')
+subdir('docs')
+
+if not meson.is_cross_build()
+  # On Visual Studio, we don't normally have a shell interpreter, so use a .bat
+  if cc.get_id() == 'msvc'
+    meson.add_install_script('build-aux/post-install.bat',
+      gdk_pixbuf_bindir,
+      gdk_pixbuf_libdir,
+      gdk_pixbuf_binary_version,
+    )
+  else
+    meson.add_install_script('build-aux/post-install.sh',
+      gdk_pixbuf_bindir,
+      gdk_pixbuf_libdir,
+      gdk_pixbuf_binary_version,
+    )
+  endif
+endif
+
+summary = [
+  '',
+  'GDK-Pixbuf @0@'.format(meson.project_version()),
+  '==================',
+  '           prefix: @0@'.format(gdk_pixbuf_prefix),
+  '           libdir: @0@'.format(gdk_pixbuf_libdir),
+  '          datadir: @0@'.format(gdk_pixbuf_datadir),
+  '       libexecdir: @0@'.format(gdk_pixbuf_libexecdir),
+  '',
+  '  enabled loaders: @0@'.format(' '.join(enabled_loaders)),
+  '',
+  '    documentation: @0@'.format(get_option('docs')),
+  '        man pages: @0@'.format(get_option('man')),
+  '    introspection: @0@'.format(get_option('gir')),
+  '              x11: @0@'.format(get_option('x11')),
+  '  installed tests: @0@'.format(get_option('installed_tests')),
+  '      relocatable: @0@'.format(get_option('relocatable')),
+  '',
+]
+message('\n'.join(summary))

@@ -51,9 +51,8 @@
  * SECTION:gdk-pixbuf-xlib-rgb
  * @Short_description: Rendering RGB buffers to X drawables.
  * @Title: XlibRGB
- * @See_also:    GdkRGB
  * 
- * The XlibRGB set of functions is a port of the #GdkRGB library to
+ * The XlibRGB set of functions is a port of the GdkRGB library to
  * use plain Xlib and X drawables.  You can use these functions to
  * render RGB buffers into drawables very quickly with high-quality
  * dithering.
@@ -664,10 +663,9 @@ xlib_rgb_choose_visual_for_xprint (int aDepth)
   int i;
 
   XWindowAttributes win_att;
-  Status ret_stat;
   Visual      *root_visual;
 
-  ret_stat = XGetWindowAttributes(image_info->display, 
+  XGetWindowAttributes(image_info->display,
 			RootWindow(image_info->display, image_info->screen_num),
 			&win_att);
   root_visual = win_att.visual;
@@ -712,7 +710,7 @@ xlib_rgb_set_gray_cmap (Colormap cmap)
 {
   int i;
   XColor color;
-  int status;
+  Status status G_GNUC_UNUSED;
   unsigned long pixels[256];
   int r, g, b, gray;
 
@@ -1346,19 +1344,24 @@ static guint32 *DM_565 = NULL;
 static void
 xlib_rgb_preprocess_dm_565 (void)
 {
-  int i;
-  guint32 dith;
-
   if (DM_565 == NULL)
     {
+      int i, x, y;
+      guint32 dith;
+
       DM_565 = malloc(sizeof(guint32) * DM_WIDTH * DM_HEIGHT);
-      for (i = 0; i < DM_WIDTH * DM_HEIGHT; i++)
+      i = 0;
+      for (y = 0; y < DM_HEIGHT; y++)
 	{
-	  dith = DM[0][i] >> 3;
-	  DM_565[i] = (dith << 20) | dith | (((7 - dith) >> 1) << 10);
+	  for (x = 0; x < DM_WIDTH; x++)
+	    {
+	      dith = DM[y][x] >> 3;
+	      DM_565[i] = (dith << 20) | dith | (((7 - dith) >> 1) << 10);
 #ifdef VERBOSE
-	  printf ("%i %x %x\n", i, dith, DM_565[i]);
+	      printf ("%i %x %x\n", i, dith, DM_565[i]);
 #endif
+	      i++;
+	    }
 	}
     }
 }

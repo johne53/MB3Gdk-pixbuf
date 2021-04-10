@@ -21,7 +21,6 @@ gdkpixbuf_xlib = library('gdk_pixbuf_xlib-2.0',
                          soversion: soversion,
                          version: libversion,
                          c_args: common_cflags + gdk_pixbuf_cflags + [
-                           '-DHAVE_CONFIG_H',
                            '-DSTDC_HEADERS',
                          ],
                          link_args: common_ldflags,
@@ -32,17 +31,13 @@ gdkpixbuf_xlib = library('gdk_pixbuf_xlib-2.0',
                          dependencies: gdk_pixbuf_deps + [ gdkpixbuf_dep, x11_dep ],
                          install: true)
 
-# Compat variables for pkgconfig
-pkgconf = configuration_data()
-pkgconf.set('prefix', gdk_pixbuf_prefix)
-pkgconf.set('exec_prefix', gdk_pixbuf_prefix)
-pkgconf.set('libdir', gdk_pixbuf_libdir)
-pkgconf.set('includedir', gdk_pixbuf_includedir)
-pkgconf.set('GDK_PIXBUF_API_VERSION', gdk_pixbuf_api_version)
-pkgconf.set('VERSION', meson.project_version())
-
-configure_file(input: 'gdk-pixbuf-xlib-2.0.pc.in',
-               output: 'gdk-pixbuf-xlib-2.0.pc',
-               configuration: pkgconf,
-               install: true,
-               install_dir: join_paths(gdk_pixbuf_libdir, 'pkgconfig'))
+pkgconfig.generate(
+  name: 'GdkPixbuf Xlib',
+  description: 'GdkPixbuf rendering for Xlib',
+  version: meson.project_version(),
+  libraries: gdkpixbuf_xlib,
+  requires: 'gdk-pixbuf-2.0',
+  filebase: 'gdk-pixbuf-xlib-2.0',
+  subdirs: gdk_pixbuf_api_name,
+  install_dir: join_paths(gdk_pixbuf_libdir, 'pkgconfig'),
+)

@@ -1,3 +1,53 @@
+2.40.0 (stable)
+===
+
+ - Allow creating a GdkPixbuf instance without any property [Federico Mena
+   Quintero, #91]
+
+2.39.2 (development)
+===
+
+ - Add gdk_pixbuf_init_modules() for applications with GdkPixbuf loader
+   modules in a separate directory [Bastien Nocera, bgo#786035]
+ - Add subproject fallback for dependencies [Nirbheek Chauhan]
+ - Handle large XPM without crashing [Bastien Nocera, #95]
+ - Use the appropriate gdk-pixbuf-query-loaders on install [Emmanuele
+   Bassi, #126]
+ - Disable deprecation warnings introduced by GLib 2.62
+ - Escape GIF version in error messages [Robert Ancell]
+ - Use the appropriate fallback for libpng on Windows [Chun-wei Fan]
+ - Render GIF frames on demand [Robert Ancell, #101]
+
+2.38.0 (stable)
+===
+ - Documentation fixes
+
+2.37.92 (release candidate)
+===
+ - Ensure that GdkPixbuf's storage is safely handled [Federico Mena Quintero]
+ - Add test case for buffer overflow in pixdata loader [Bastien Nocera, #57]
+
+2.37.0 (development)
+===
+ - Rework relocation support for loaders cache on Windows [Christoph Reiter, #776081]
+ - Properly install test data [Emmanuele Bassi, Jeremy Bicha, #795527, #795210]
+ - Plug a memory leak when using GBytes [Vitaly Kirsanov, #787626]
+ - Fix introspection annotations [Iñaki García Etxebarria, #789935]
+ - Fix documentation building with X11 disabled [Quentin Glidic, #794872]
+ - Drop Autotools build and move to Meson [Emmanuele Bassi]
+ - Fix OOB error when dithering [Bert Pauline, #748211]
+ - Drop the MMX assembly optimizations for pixops [Emmanuele Bassi]
+ - Improve compatibility for the post-install script [Brendan L, #795705]
+ - Expose the dimensions of the original image from GdkPixbufLoader [Debarshi Ray, #778517]
+ - Improve thumbnailer implementation [Debarshi Ray, #778517]
+ - Make X11 a dependency if the `x11` build option is enabled [Emmanuele Bassi, #77]
+ - Generate separate introspection data for GdkPixdata API [Emmanuele Bassi, #72]
+ - Deprecate GDK_INTERP_HYPER [Emmanuele Bassi, #3]
+ - Avoid a deprecation warning with recent libjasper [Emmanuele Bassi, #73]
+ - Fix build on macOS [Emmanuele Bassi, !5]
+ - Fix build with Visual Studio [Chun-wei Fan, !8]
+ - Fix cross-compilation of Windows build on Linux [Benjamin Gilbert, !10]
+
 2.36.12
 =======
 * build: meson fixes for win32

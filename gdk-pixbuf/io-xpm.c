@@ -30,8 +30,10 @@
 #include <unistd.h> /* for unlink */
 #endif
 #include <errno.h>
-#include "gdk-pixbuf-private.h"
 #include <glib/gstdio.h>
+#include <glib/gi18n-lib.h>
+#include "gdk-pixbuf-core.h"
+#include "gdk-pixbuf-io.h"
 
 
 
@@ -457,7 +459,8 @@ pixbuf_create_from_xpm (const gchar * (*get_buf) (enum buf_op op, gpointer handl
 	GHashTable *color_hash;
 	XPMColor *colors, *color, *fallbackcolor;
 	guchar *pixtmp;
-	GdkPixbuf *pixbuf;
+	GdkPixbuf *pixbuf = NULL;
+	gint rowstride;
 
 	fallbackcolor = NULL;
 
@@ -494,6 +497,15 @@ pixbuf_create_from_xpm (const gchar * (*get_buf) (enum buf_op op, gpointer handl
                                      _("XPM file has image height <= 0"));
 		return NULL;
 
+	}
+	/* Check from libXpm's ParsePixels() */
+	if ((h > 0 && w >= UINT_MAX / h) ||
+	    w * h >= UINT_MAX / sizeof(unsigned int)) {
+		g_set_error_literal (error,
+                                     GDK_PIXBUF_ERROR,
+                                     GDK_PIXBUF_ERROR_CORRUPT_IMAGE,
+                                     _("Invalid XPM header"));
+		return NULL;
 	}
 	if (cpp <= 0 || cpp >= 32) {
                 g_set_error_literal (error,
@@ -544,10 +556,7 @@ pixbuf_create_from_xpm (const gchar * (*get_buf) (enum buf_op op, gpointer handl
                                              GDK_PIXBUF_ERROR,
                                              GDK_PIXBUF_ERROR_CORRUPT_IMAGE,
                                              _("Cannot read XPM colormap"));
-			g_hash_table_destroy (color_hash);
-			g_free (name_buf);
-			g_free (colors);
-			return NULL;
+                        goto out;
 		}
 
 		color = &colors[cnt];
@@ -582,20 +591,25 @@ pixbuf_create_from_xpm (const gchar * (*get_buf) (enum buf_op op, gpointer handl
                                      GDK_PIXBUF_ERROR,
                                      GDK_PIXBUF_ERROR_INSUFFICIENT_MEMORY,
                                      _("Cannot allocate memory for loading XPM image"));
-		g_hash_table_destroy (color_hash);
-		g_free (colors);
-		g_free (name_buf);
-		return NULL;
+                goto out;
 	}
+
+	rowstride = gdk_pixbuf_get_rowstride (pixbuf);
 
 	wbytes = w * cpp;
 
 	for (ycnt = 0; ycnt < h; ycnt++) {
-		pixtmp = pixbuf->pixels + ycnt * pixbuf->rowstride;
+		pixtmp = gdk_pixbuf_get_pixels (pixbuf) + ycnt * rowstride;
 
 		buffer = (*get_buf) (op_body, handle);
-		if ((!buffer) || (strlen (buffer) < wbytes))
-			continue;
+		if ((!buffer) || (strlen (buffer) < wbytes)) {
+			/* Advertised width doesn't match pixels */
+			g_set_error_literal (error,
+					     GDK_PIXBUF_ERROR,
+					     GDK_PIXBUF_ERROR_CORRUPT_IMAGE,
+					     _("Dimensions do not match data"));
+			goto out;
+		}
 
 		for (n = 0, xcnt = 0; n < wbytes; n += cpp, xcnt++) {
 			strncpy (pixel_str, &buffer[n], cpp);
@@ -632,6 +646,14 @@ pixbuf_create_from_xpm (const gchar * (*get_buf) (enum buf_op op, gpointer handl
 	}
 
 	return pixbuf;
+
+out:
+	g_hash_table_destroy (color_hash);
+	g_free (colors);
+	g_free (name_buf);
+
+	g_clear_object (&pixbuf);
+	return NULL;
 }
 
 /* Shared library entry point for file loading */
@@ -744,7 +766,11 @@ gdk_pixbuf__xpm_image_stop_load (gpointer data,
 							  NULL,
 							  context->user_data);
 		       if (context->update_func)
-			       (* context->update_func) (pixbuf, 0, 0, pixbuf->width, pixbuf->height, context->user_data);
+			       (* context->update_func) (pixbuf,
+							 0, 0,
+							 gdk_pixbuf_get_width (pixbuf),
+							 gdk_pixbuf_get_height (pixbuf),
+							 context->user_data);
                        g_object_unref (pixbuf);
 
                        retval = TRUE;

@@ -27,8 +27,18 @@
 #include <string.h>
 #include <png.h>
 #include <math.h>
-#include "gdk-pixbuf-private.h"
+#include <glib-object.h>
+#include <glib/gi18n-lib.h>
+
+#include "gdk-pixbuf-core.h"
+#include "gdk-pixbuf-io.h"
 #include "fallback-c89.c"
+
+/* Helper macros to convert between density units */
+#define DPI_TO_DPM(value) ((int) round ((value) * 1000 / 25.4))
+#define DPM_TO_DPI(value) ((int) round ((value) * 25.4 / 1000))
+
+#define DEFAULT_FILL_COLOR 0x979899ff
 
 static gboolean
 setup_png_transformations(png_structp png_read_ptr, png_infop png_info_ptr,
@@ -247,6 +257,7 @@ static GdkPixbuf *
 gdk_pixbuf__png_image_load (FILE *f, GError **error)
 {
         GdkPixbuf * volatile pixbuf = NULL;
+        gint rowstride;
 	png_structp png_ptr;
 	png_infop info_ptr;
         png_textp text_ptr;
@@ -321,11 +332,13 @@ gdk_pixbuf__png_image_load (FILE *f, GError **error)
 		return NULL;
 	}
 
+        rowstride = gdk_pixbuf_get_rowstride (pixbuf);
+
         gdk_pixbuf_fill (pixbuf, DEFAULT_FILL_COLOR);
 
 	rows = g_new (png_bytep, h);
 
-        for (i = 0, ptr = pixbuf->pixels; i < h; i++, ptr = (guchar *) ptr + pixbuf->rowstride)
+        for (i = 0, ptr = gdk_pixbuf_get_pixels (pixbuf); i < h; i++, ptr = (guchar *) ptr + rowstride)
 		rows[i] = ptr;
 
 	png_read_image (png_ptr, rows);
@@ -470,17 +483,19 @@ gdk_pixbuf__png_image_begin_load (GdkPixbufModuleSizeFunc size_func,
 #endif
         if (lc->png_read_ptr == NULL) {
                 g_free(lc);
-                /* error callback should have set the error */
+
+                /* A failure here isn't supposed to call the error
+                 * callback, but it doesn't hurt to be careful.
+                 */
+                if (error && *error == NULL) {
+                        g_set_error_literal (error,
+                                             GDK_PIXBUF_ERROR,
+                                             GDK_PIXBUF_ERROR_INSUFFICIENT_MEMORY,
+                                             _("Couldn’t allocate memory for loading PNG"));
+                }
+
                 return NULL;
         }
-        
-	if (setjmp (png_jmpbuf(lc->png_read_ptr))) {
-		if (lc->png_info_ptr)
-			png_destroy_read_struct(&lc->png_read_ptr, NULL, NULL);
-                g_free(lc);
-                /* error callback should have set the error */
-                return NULL;
-	}
 
         /* Create the auxiliary context struct */
 
@@ -488,6 +503,23 @@ gdk_pixbuf__png_image_begin_load (GdkPixbufModuleSizeFunc size_func,
 
         if (lc->png_info_ptr == NULL) {
                 png_destroy_read_struct(&lc->png_read_ptr, NULL, NULL);
+                g_free(lc);
+
+                /* A failure here isn't supposed to call the error
+                 * callback, but it doesn't hurt to be careful.
+                 */
+                if (error && *error == NULL) {
+                        g_set_error_literal (error,
+                                             GDK_PIXBUF_ERROR,
+                                             GDK_PIXBUF_ERROR_INSUFFICIENT_MEMORY,
+                                             _("Couldn’t allocate memory for loading PNG"));
+                }
+
+                return NULL;
+        }
+
+        if (setjmp (png_jmpbuf(lc->png_read_ptr))) {
+                png_destroy_read_struct(&lc->png_read_ptr, &lc->png_info_ptr, NULL);
                 g_free(lc);
                 /* error callback should have set the error */
                 return NULL;
@@ -566,6 +598,8 @@ gdk_pixbuf__png_image_load_increment(gpointer context,
                 return FALSE;
         } else {
                 if (lc->first_row_seen_in_chunk >= 0 && lc->update_func) {
+                        gint width = gdk_pixbuf_get_width (lc->pixbuf);
+
                         /* We saw at least one row */
                         gint pass_diff = lc->last_pass_seen_in_chunk - lc->first_pass_seen_in_chunk;
                         
@@ -575,7 +609,7 @@ gdk_pixbuf__png_image_load_increment(gpointer context,
                                 /* start and end row were in the same pass */
                                 (lc->update_func)(lc->pixbuf, 0,
                                                   lc->first_row_seen_in_chunk,
-                                                  lc->pixbuf->width,
+                                                  width,
                                                   (lc->last_row_seen_in_chunk -
                                                    lc->first_row_seen_in_chunk) + 1,
 						  lc->notify_user_data);
@@ -587,14 +621,14 @@ gdk_pixbuf__png_image_load_increment(gpointer context,
                                 /* first row to end */
                                 (lc->update_func)(lc->pixbuf, 0,
                                                   lc->first_row_seen_in_chunk,
-                                                  lc->pixbuf->width,
+                                                  width,
                                                   (lc->max_row_seen_in_chunk -
                                                    lc->first_row_seen_in_chunk) + 1,
 						  lc->notify_user_data);
                                 /* top to last row */
                                 (lc->update_func)(lc->pixbuf,
                                                   0, 0, 
-                                                  lc->pixbuf->width,
+                                                  width,
                                                   lc->last_row_seen_in_chunk + 1,
 						  lc->notify_user_data);
                         } else {
@@ -602,7 +636,7 @@ gdk_pixbuf__png_image_load_increment(gpointer context,
                                    whole image */
                                 (lc->update_func)(lc->pixbuf,
                                                   0, 0, 
-                                                  lc->pixbuf->width,
+                                                  width,
                                                   lc->max_row_seen_in_chunk + 1,
 						  lc->notify_user_data);
                         }
@@ -747,7 +781,7 @@ png_row_callback   (png_structp png_read_ptr,
         if (lc->fatal_error_occurred)
                 return;
 
-        if (row_num >= lc->pixbuf->height) {
+        if (row_num >= gdk_pixbuf_get_height (lc->pixbuf)) {
                 lc->fatal_error_occurred = TRUE;
                 g_set_error_literal (lc->error,
                                      GDK_PIXBUF_ERROR,
@@ -765,8 +799,8 @@ png_row_callback   (png_structp png_read_ptr,
         lc->last_row_seen_in_chunk = row_num;
         lc->last_pass_seen_in_chunk = pass_num;
 
-        rowstride = lc->pixbuf->rowstride;
-        old_row = lc->pixbuf->pixels + (row_num * rowstride);
+        rowstride = gdk_pixbuf_get_rowstride (lc->pixbuf);
+        old_row = gdk_pixbuf_get_pixels (lc->pixbuf) + (row_num * rowstride);
 
         png_progressive_combine_row(lc->png_read_ptr, old_row, new_row);
 }
@@ -1114,13 +1148,13 @@ static gboolean real_save_png (GdkPixbuf        *pixbuf,
                              PNG_COLOR_TYPE_RGB, PNG_INTERLACE_NONE,
                              PNG_COMPRESSION_TYPE_BASE, PNG_FILTER_TYPE_BASE);
        }
+       /* Note bpc is always 8 */
        sig_bit.red = bpc;
        sig_bit.green = bpc;
        sig_bit.blue = bpc;
        sig_bit.alpha = bpc;
        png_set_sBIT (png_ptr, info_ptr, &sig_bit);
        png_write_info (png_ptr, info_ptr);
-       png_set_shift (png_ptr, &sig_bit);
        png_set_packing (png_ptr);
 
        for (y = 0, ptr = pixels; y < h; y++, ptr += rowstride) {

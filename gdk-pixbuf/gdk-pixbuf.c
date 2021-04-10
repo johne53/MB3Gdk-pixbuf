@@ -108,6 +108,7 @@ static void gdk_pixbuf_get_property (GObject        *object,
 				     guint           prop_id,
 				     GValue         *value,
 				     GParamSpec     *pspec);
+static void gdk_pixbuf_constructed  (GObject        *object);
 
 
 enum 
@@ -138,6 +139,7 @@ gdk_pixbuf_init (GdkPixbuf *pixbuf)
   pixbuf->n_channels = 3;
   pixbuf->bits_per_sample = 8;
   pixbuf->has_alpha = FALSE;
+  pixbuf->storage = STORAGE_UNINITIALIZED;
 }
 
 static void
@@ -150,6 +152,7 @@ gdk_pixbuf_class_init (GdkPixbufClass *klass)
         object_class->finalize = gdk_pixbuf_finalize;
         object_class->set_property = gdk_pixbuf_set_property;
         object_class->get_property = gdk_pixbuf_get_property;
+        object_class->constructed = gdk_pixbuf_constructed;
 
 #define PIXBUF_PARAM_FLAGS G_PARAM_READWRITE|G_PARAM_CONSTRUCT_ONLY|\
                            G_PARAM_EXPLICIT_NOTIFY|\
@@ -265,14 +268,42 @@ gdk_pixbuf_class_init (GdkPixbufClass *klass)
 }
 
 static void
+free_pixels (GdkPixbuf *pixbuf)
+{
+        g_assert (pixbuf->storage == STORAGE_PIXELS);
+
+        if (pixbuf->s.pixels.pixels && pixbuf->s.pixels.destroy_fn) {
+                (* pixbuf->s.pixels.destroy_fn) (pixbuf->s.pixels.pixels, pixbuf->s.pixels.destroy_fn_data);
+        }
+
+        pixbuf->s.pixels.pixels = NULL;
+}
+
+static void
+free_bytes (GdkPixbuf *pixbuf)
+{
+        g_assert (pixbuf->storage == STORAGE_BYTES);
+
+        g_clear_pointer (&pixbuf->s.bytes.bytes, g_bytes_unref);
+}
+
+static void
 gdk_pixbuf_finalize (GObject *object)
 {
         GdkPixbuf *pixbuf = GDK_PIXBUF (object);
-        
-        if (pixbuf->pixels && pixbuf->destroy_fn)
-                (* pixbuf->destroy_fn) (pixbuf->pixels, pixbuf->destroy_fn_data);
 
-        g_clear_pointer (&pixbuf->bytes, g_bytes_unref);
+        switch (pixbuf->storage) {
+        case STORAGE_PIXELS:
+                free_pixels (pixbuf);
+                break;
+
+        case STORAGE_BYTES:
+                free_bytes (pixbuf);
+                break;
+
+        default:
+                g_assert_not_reached ();
+        }
         
         G_OBJECT_CLASS (gdk_pixbuf_parent_class)->finalize (object);
 }
@@ -473,7 +504,7 @@ gdk_pixbuf_calculate_rowstride (GdkColorspace colorspace,
  * buffer has an optimal rowstride.  Note that the buffer is not cleared;
  * you will have to fill it completely yourself.
  *
- * Return value: A newly-created #GdkPixbuf with a reference count of 1, or 
+ * Return value: (nullable): A newly-created #GdkPixbuf with a reference count of 1, or
  * %NULL if not enough memory could be allocated for the image buffer.
  **/
 GdkPixbuf *
@@ -511,7 +542,7 @@ gdk_pixbuf_new (GdkColorspace colorspace,
  * @pixbuf. Note that this does not copy the options set on the original #GdkPixbuf,
  * use gdk_pixbuf_copy_options() for this.
  * 
- * Return value: (transfer full): A newly-created pixbuf with a reference count of 1, or %NULL if
+ * Return value: (nullable) (transfer full): A newly-created pixbuf with a reference count of 1, or %NULL if
  * not enough memory could be allocated.
  **/
 GdkPixbuf *
@@ -688,6 +719,32 @@ gdk_pixbuf_get_pixels (const GdkPixbuf *pixbuf)
         return gdk_pixbuf_get_pixels_with_length (pixbuf, NULL);
 }
 
+static void
+downgrade_to_pixels (const GdkPixbuf *pixbuf)
+{
+        switch (pixbuf->storage) {
+        case STORAGE_PIXELS:
+                return;
+
+        case STORAGE_BYTES: {
+                GdkPixbuf *mut_pixbuf = (GdkPixbuf *) pixbuf;
+                gsize len;
+                Pixels pixels;
+
+                pixels.pixels = g_bytes_unref_to_data (pixbuf->s.bytes.bytes, &len);
+                pixels.destroy_fn = free_buffer;
+                pixels.destroy_fn_data = NULL;
+
+                mut_pixbuf->storage = STORAGE_PIXELS;
+                mut_pixbuf->s.pixels = pixels;
+                break;
+        }
+
+        default:
+                g_assert_not_reached ();
+        }
+}
+
 /**
  * gdk_pixbuf_get_pixels_with_length: (rename-to gdk_pixbuf_get_pixels)
  * @pixbuf: A pixbuf.
@@ -710,27 +767,25 @@ gdk_pixbuf_get_pixels_with_length (const GdkPixbuf *pixbuf,
 {
 	g_return_val_if_fail (GDK_IS_PIXBUF (pixbuf), NULL);
 
-        if (pixbuf->bytes) {
-                GdkPixbuf *mut_pixbuf = (GdkPixbuf*)pixbuf;
-                gsize len;
-                mut_pixbuf->pixels = g_bytes_unref_to_data (pixbuf->bytes, &len);
-                mut_pixbuf->bytes = NULL;
-        }
+        downgrade_to_pixels (pixbuf);
+        g_assert (pixbuf->storage == STORAGE_PIXELS);
 
         if (length)
                 *length = gdk_pixbuf_get_byte_length (pixbuf);
 
-	return pixbuf->pixels;
+	return pixbuf->s.pixels.pixels;
 }
 
 /**
  * gdk_pixbuf_read_pixels:
  * @pixbuf: A pixbuf
  *
- * Returns a read-only pointer to the raw pixel data; must not be
+ * Provides a read-only pointer to the raw pixel data; must not be
  * modified.  This function allows skipping the implicit copy that
  * must be made if gdk_pixbuf_get_pixels() is called on a read-only
  * pixbuf.
+ *
+ * Returns: a read-only pointer to the raw pixel data
  *
  * Since: 2.32
  */
@@ -738,13 +793,20 @@ const guint8*
 gdk_pixbuf_read_pixels (const GdkPixbuf  *pixbuf)
 {
 	g_return_val_if_fail (GDK_IS_PIXBUF (pixbuf), NULL);
-        
-        if (pixbuf->bytes) {
+
+        switch (pixbuf->storage) {
+        case STORAGE_PIXELS:
+                return pixbuf->s.pixels.pixels;
+
+        case STORAGE_BYTES: {
                 gsize len;
                 /* Ignore len; callers know the size via other variables */
-                return g_bytes_get_data (pixbuf->bytes, &len);
-        } else {
-                return pixbuf->pixels;
+                return g_bytes_get_data (pixbuf->s.bytes.bytes, &len);
+        }
+
+        default:
+                g_assert_not_reached ();
+                return NULL;
         }
 }
 
@@ -752,10 +814,15 @@ gdk_pixbuf_read_pixels (const GdkPixbuf  *pixbuf)
  * gdk_pixbuf_read_pixel_bytes:
  * @pixbuf: A pixbuf
  *
+ * Provides a #GBytes buffer containing the raw pixel data; the data
+ * must not be modified.  This function allows skipping the implicit
+ * copy that must be made if gdk_pixbuf_get_pixels() is called on a
+ * read-only pixbuf.
+ *
  * Returns: (transfer full): A new reference to a read-only copy of
- * the pixel data.  Note that for mutable pixbufs, this function will
- * incur a one-time copy of the pixel data for conversion into the
- * returned #GBytes.
+ *   the pixel data.  Note that for mutable pixbufs, this function will
+ *   incur a one-time copy of the pixel data for conversion into the
+ *   returned #GBytes.
  *
  * Since: 2.32
  */
@@ -764,11 +831,16 @@ gdk_pixbuf_read_pixel_bytes (const GdkPixbuf  *pixbuf)
 {
         g_return_val_if_fail (GDK_IS_PIXBUF (pixbuf), NULL);
 
-        if (pixbuf->bytes) {
-                return g_bytes_ref (pixbuf->bytes);
-        } else {
-                return g_bytes_new (pixbuf->pixels,
+        switch (pixbuf->storage) {
+        case STORAGE_PIXELS:
+                return g_bytes_new (pixbuf->s.pixels.pixels,
                                     gdk_pixbuf_get_byte_length (pixbuf));
+
+        case STORAGE_BYTES:
+                return g_bytes_ref (pixbuf->s.bytes.bytes);
+
+        default:
+                g_assert_not_reached ();
         }
 }
 
@@ -877,7 +949,6 @@ gdk_pixbuf_fill (GdkPixbuf *pixbuf,
         guint w, h;
 
         g_return_if_fail (GDK_IS_PIXBUF (pixbuf));
-        g_return_if_fail (pixbuf->pixels || pixbuf->bytes);
 
         if (pixbuf->width == 0 || pixbuf->height == 0)
                 return;
@@ -1171,51 +1242,81 @@ gdk_pixbuf_set_property (GObject         *object,
 			 const GValue    *value,
 			 GParamSpec      *pspec)
 {
-  GdkPixbuf *pixbuf = GDK_PIXBUF (object);
-  gboolean notify = TRUE;
+        GdkPixbuf *pixbuf = GDK_PIXBUF (object);
+        gboolean notify = TRUE;
 
-  switch (prop_id)
-          {
-          case PROP_COLORSPACE:
-                  notify = pixbuf->colorspace != g_value_get_enum (value);
-                  pixbuf->colorspace = g_value_get_enum (value);
-                  break;
-          case PROP_N_CHANNELS:
-                  notify = pixbuf->n_channels != g_value_get_int (value);
-                  pixbuf->n_channels = g_value_get_int (value);
-                  break;
-          case PROP_HAS_ALPHA:
-                  notify = pixbuf->has_alpha != g_value_get_boolean (value);
-                  pixbuf->has_alpha = g_value_get_boolean (value);
-                  break;
-          case PROP_BITS_PER_SAMPLE:
-                  notify = pixbuf->bits_per_sample != g_value_get_int (value);
-                  pixbuf->bits_per_sample = g_value_get_int (value);
-                  break;
-          case PROP_WIDTH:
-                  notify = pixbuf->width != g_value_get_int (value);
-                  pixbuf->width = g_value_get_int (value);
-                  break;
-          case PROP_HEIGHT:
-                  notify = pixbuf->height != g_value_get_int (value);
-                  pixbuf->height = g_value_get_int (value);
-                  break;
-          case PROP_ROWSTRIDE:
-                  notify = pixbuf->rowstride != g_value_get_int (value);
-                  pixbuf->rowstride = g_value_get_int (value);
-                  break;
-          case PROP_PIXELS:
-                  notify = pixbuf->pixels != (guchar *) g_value_get_pointer (value);
-                  pixbuf->pixels = (guchar *) g_value_get_pointer (value);
-                  break;
-          case PROP_PIXEL_BYTES:
-                  notify = pixbuf->bytes != g_value_get_boxed (value);
-                  pixbuf->bytes = g_value_dup_boxed (value);
-                  break;
-          default:
-                  G_OBJECT_WARN_INVALID_PROPERTY_ID (object, prop_id, pspec);
-                  break;
-          }
+        switch (prop_id) {
+        case PROP_COLORSPACE:
+                notify = pixbuf->colorspace != g_value_get_enum (value);
+                pixbuf->colorspace = g_value_get_enum (value);
+                break;
+        case PROP_N_CHANNELS:
+                notify = pixbuf->n_channels != g_value_get_int (value);
+                pixbuf->n_channels = g_value_get_int (value);
+                break;
+        case PROP_HAS_ALPHA:
+                notify = pixbuf->has_alpha != g_value_get_boolean (value);
+                pixbuf->has_alpha = g_value_get_boolean (value);
+                break;
+        case PROP_BITS_PER_SAMPLE:
+                notify = pixbuf->bits_per_sample != g_value_get_int (value);
+                pixbuf->bits_per_sample = g_value_get_int (value);
+                break;
+        case PROP_WIDTH:
+                notify = pixbuf->width != g_value_get_int (value);
+                pixbuf->width = g_value_get_int (value);
+                break;
+        case PROP_HEIGHT:
+                notify = pixbuf->height != g_value_get_int (value);
+                pixbuf->height = g_value_get_int (value);
+                break;
+        case PROP_ROWSTRIDE:
+                notify = pixbuf->rowstride != g_value_get_int (value);
+                pixbuf->rowstride = g_value_get_int (value);
+                break;
+
+        /* The following two are a bit strange.  Both PROP_PIXELS and
+         * PROP_PIXEL_BYTES are G_PARAM_CONSTRUCT_ONLY properties, which means
+         * that GObject will generate default values for any missing one and
+         * call us for *both*.  So, we need to check whether the passed value is
+         * not NULL before actually setting pixbuf->storage.
+         */
+        case PROP_PIXELS: {
+                guchar *pixels = g_value_get_pointer (value);
+
+                if (pixels) {
+                        g_assert (pixbuf->storage == STORAGE_UNINITIALIZED);
+
+                        pixbuf->storage = STORAGE_PIXELS;
+                        pixbuf->s.pixels.pixels = pixels;
+                        pixbuf->s.pixels.destroy_fn = NULL;
+                        pixbuf->s.pixels.destroy_fn_data = NULL;
+                } else {
+                        notify = FALSE;
+                }
+
+                break;
+        }
+
+        case PROP_PIXEL_BYTES: {
+                GBytes *bytes = g_value_get_boxed (value);
+
+                if (bytes) {
+                        g_assert (pixbuf->storage == STORAGE_UNINITIALIZED);
+
+                        pixbuf->storage = STORAGE_BYTES;
+                        pixbuf->s.bytes.bytes = g_value_dup_boxed (value);
+                } else {
+                        notify = FALSE;
+                }
+
+                break;
+        }
+
+        default:
+                G_OBJECT_WARN_INVALID_PROPERTY_ID (object, prop_id, pspec);
+                break;
+        }
 
         if (notify)
                 g_object_notify_by_pspec (G_OBJECT (object), pspec);
@@ -1227,39 +1328,109 @@ gdk_pixbuf_get_property (GObject         *object,
 			 GValue          *value,
 			 GParamSpec      *pspec)
 {
-  GdkPixbuf *pixbuf = GDK_PIXBUF (object);
+        GdkPixbuf *pixbuf = GDK_PIXBUF (object);
   
-  switch (prop_id)
-          {
-          case PROP_COLORSPACE:
-                  g_value_set_enum (value, gdk_pixbuf_get_colorspace (pixbuf));
-                  break;
-          case PROP_N_CHANNELS:
-                  g_value_set_int (value, gdk_pixbuf_get_n_channels (pixbuf));
-                  break;
-          case PROP_HAS_ALPHA:
-                  g_value_set_boolean (value, gdk_pixbuf_get_has_alpha (pixbuf));
-                  break;
-          case PROP_BITS_PER_SAMPLE:
-                  g_value_set_int (value, gdk_pixbuf_get_bits_per_sample (pixbuf));
-                  break;
-          case PROP_WIDTH:
-                  g_value_set_int (value, gdk_pixbuf_get_width (pixbuf));
-                  break;
-          case PROP_HEIGHT:
-                  g_value_set_int (value, gdk_pixbuf_get_height (pixbuf));
-                  break;
-          case PROP_ROWSTRIDE:
-                  g_value_set_int (value, gdk_pixbuf_get_rowstride (pixbuf));
-                  break;
-          case PROP_PIXELS:
-                  g_value_set_pointer (value, gdk_pixbuf_get_pixels (pixbuf));
-                  break;
-          case PROP_PIXEL_BYTES:
-                  g_value_set_boxed (value, pixbuf->bytes);
-                  break;
-          default:
-                  G_OBJECT_WARN_INVALID_PROPERTY_ID (object, prop_id, pspec);
-                  break;
-          }
+        switch (prop_id) {
+        case PROP_COLORSPACE:
+                g_value_set_enum (value, gdk_pixbuf_get_colorspace (pixbuf));
+                break;
+        case PROP_N_CHANNELS:
+                g_value_set_int (value, gdk_pixbuf_get_n_channels (pixbuf));
+                break;
+        case PROP_HAS_ALPHA:
+                g_value_set_boolean (value, gdk_pixbuf_get_has_alpha (pixbuf));
+                break;
+        case PROP_BITS_PER_SAMPLE:
+                g_value_set_int (value, gdk_pixbuf_get_bits_per_sample (pixbuf));
+                break;
+        case PROP_WIDTH:
+                g_value_set_int (value, gdk_pixbuf_get_width (pixbuf));
+                break;
+        case PROP_HEIGHT:
+                g_value_set_int (value, gdk_pixbuf_get_height (pixbuf));
+                break;
+        case PROP_ROWSTRIDE:
+                g_value_set_int (value, gdk_pixbuf_get_rowstride (pixbuf));
+                break;
+        case PROP_PIXELS:
+                g_value_set_pointer (value, gdk_pixbuf_get_pixels (pixbuf));
+                break;
+        case PROP_PIXEL_BYTES:
+                g_value_set_boxed (value, gdk_pixbuf_read_pixel_bytes (pixbuf));
+                break;
+        default:
+                G_OBJECT_WARN_INVALID_PROPERTY_ID (object, prop_id, pspec);
+                break;
+        }
+}
+
+static void
+make_storage_invalid (GdkPixbuf *pixbuf)
+{
+        char *buf;
+        gsize bufsize = 3;
+
+        buf = g_new0(char, bufsize);
+
+        pixbuf->storage = STORAGE_BYTES;
+        pixbuf->s.bytes.bytes = g_bytes_new_with_free_func (buf, bufsize, g_free, NULL);
+
+        pixbuf->colorspace = GDK_COLORSPACE_RGB;
+        pixbuf->n_channels = 3;
+        pixbuf->bits_per_sample = 8;
+        pixbuf->width = 1;
+        pixbuf->height = 1;
+        pixbuf->rowstride = 3;
+        pixbuf->has_alpha = FALSE;
+}
+
+static void
+gdk_pixbuf_constructed (GObject *object)
+{
+        GdkPixbuf *pixbuf = GDK_PIXBUF (object);
+
+        G_OBJECT_CLASS (gdk_pixbuf_parent_class)->constructed (object);
+
+        switch (pixbuf->storage) {
+        case STORAGE_UNINITIALIZED:
+                /* This means that neither of the construct properties "pixels" nor "pixel-bytes"
+                 * was specified during a call to g_object_new().
+                 *
+                 * To avoid breaking ABI, we don't emit this warning.  We'll want
+                 * to emit it once we can have fallible construction.
+                 *
+                 * g_warning ("pixbuf needs to be constructed with the 'pixels' or 'pixel-bytes' properties");
+                 */
+
+                make_storage_invalid (pixbuf);
+                break;
+
+        case STORAGE_PIXELS:
+                g_assert (pixbuf->s.pixels.pixels != NULL);
+                break;
+
+        case STORAGE_BYTES: {
+                gsize bytes_size;
+                gint width, height;
+                gboolean has_alpha;
+
+                g_assert (pixbuf->s.bytes.bytes != NULL);
+
+                bytes_size = g_bytes_get_size (pixbuf->s.bytes.bytes);
+                width = pixbuf->width;
+                height = pixbuf->height;
+                has_alpha = pixbuf->has_alpha;
+
+                /* This is the same check as in gdk_pixbuf_new_from_bytes() */
+                if (!(bytes_size >= width * height * (has_alpha ? 4 : 3))) {
+                        g_error ("GBytes is too small to fit the pixbuf's declared width and height");
+                }
+                break;
+        }
+
+        default:
+                g_assert_not_reached ();
+        }
+
+        g_assert (pixbuf->storage != STORAGE_UNINITIALIZED);
 }

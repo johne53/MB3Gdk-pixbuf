@@ -10,7 +10,7 @@ subdir('pixops')
 loaders = [
   [ 'png', [ 'io-png.c' ], enabled_loaders.contains('png') ],
   [ 'bmp', [ 'io-bmp.c' ], not native_windows_loaders ],
-  [ 'gif', [ 'io-gif.c', 'io-gif-animation.c' ], not native_windows_loaders ],
+  [ 'gif', [ 'io-gif.c', 'io-gif-animation.c', 'lzw.c' ], not native_windows_loaders ],
   [ 'ico', [ 'io-ico.c' ], not native_windows_loaders ],
   [ 'ani', [ 'io-ani.c', 'io-ani-animation.c' ] ],
   [ 'jpeg', [ 'io-jpeg.c' ], enabled_loaders.contains('jpeg') ],
@@ -52,7 +52,6 @@ gdkpixbuf_features_conf.set('LT_CURRENT_MINUS_AGE', current_minus_age)
 gdk_pixbuf_features_h = configure_file(input: 'gdk-pixbuf-features.h.in',
                                        output: 'gdk-pixbuf-features.h',
                                        configuration: gdkpixbuf_features_conf,
-                                       install: true,
                                        install_dir: join_paths(gdk_pixbuf_includedir, gdk_pixbuf_api_path))
 
 gdkpixbuf_headers = [
@@ -79,12 +78,17 @@ gdkpixbuf_sources = [
   'gdk-pixbuf-simple-anim.c',
   'gdk-pixbuf-scaled-anim.c',
   'gdk-pixbuf-util.c',
+]
+
+gdkpixdata_sources = [
   'gdk-pixdata.c',
 ]
 
 gdkpixbuf_marshals = gnome.genmarshal('gdk-pixbuf-marshal',
                                       sources: 'gdk-pixbuf-marshal.list',
-                                      prefix: '_gdk_pixbuf_marshal')
+                                      prefix: '_gdk_pixbuf_marshal',
+                                      install_header: true,
+                                      install_dir: join_paths(gdk_pixbuf_includedir, gdk_pixbuf_api_path))
 
 gdkpixbuf_enums = gnome.mkenums('gdk-pixbuf-enum-types',
                                 sources: gdkpixbuf_headers,
@@ -120,6 +124,7 @@ foreach l: loaders
 
     mod = static_library('staticpixbufloader-@0@'.format(name),
                          sources,
+                         gdkpixbuf_enum_h,
                          dependencies: loaders_deps + gdk_pixbuf_deps,
                          include_directories: [ root_inc, gdk_pixbuf_inc ],
                          c_args: common_cflags + gdk_pixbuf_cflags + cflags + cflag_for_included_loader)
@@ -144,6 +149,7 @@ if native_windows_loaders
 
     mod = static_library('staticpixbufloader-gdiplus',
                          win_loader_sources,
+                         gdkpixbuf_enum_h,
                          dependencies: loaders_deps + gdk_pixbuf_deps,
                          include_directories: [ root_inc, gdk_pixbuf_inc ],
                          c_args: common_cflags + gdk_pixbuf_cflags + cflag_for_included_loader)
@@ -154,41 +160,111 @@ endif
 
 # The main gdk-pixbuf shared library
 gdkpixbuf = library('gdk_pixbuf-2.0',
-                    gdkpixbuf_sources + gdkpixbuf_enums + gdkpixbuf_marshals,
+                    sources: [
+                      gdkpixbuf_sources,
+                      pixops_sources,
+                      gdkpixbuf_enums,
+                      gdkpixbuf_marshals,
+                      gdkpixdata_sources,
+                    ],
                     soversion: soversion,
                     version: libversion,
                     c_args: common_cflags + gdk_pixbuf_cflags + included_loaders_cflags,
                     link_args: common_ldflags,
-                    include_directories: root_inc,
-                    dependencies: gdk_pixbuf_deps + included_loaders_deps + [ pixops_dep ],
+                    include_directories: [
+                      root_inc,
+                      include_directories('pixops'),
+                    ],
+                    dependencies: [
+                      gdk_pixbuf_deps,
+                      included_loaders_deps,
+                    ],
                     install: true)
 
-gdkpixbuf_dep = declare_dependency(link_with: gdkpixbuf,
-                                   include_directories: root_inc,
-                                   dependencies: gdk_pixbuf_deps,
-                                   sources: gdkpixbuf_enum_h)
+build_gir = get_option('gir')
+if build_gir
+  gir_args = [
+    '--quiet',
+    '-DGDK_PIXBUF_COMPILATION',
+  ]
+
+  gdkpixbuf_gir = gnome.generate_gir(
+    gdkpixbuf,
+    sources: [
+      gdkpixbuf_sources,
+      gdkpixbuf_headers,
+      gdkpixbuf_enums,
+      gdkpixdata_sources,
+      gdk_pixbuf_features_h,
+    ],
+    namespace: 'GdkPixbuf',
+    nsversion: gdk_pixbuf_api_version,
+    identifier_prefix: 'Gdk',
+    symbol_prefix: 'gdk',
+    export_packages: 'gdk-pixbuf-2.0',
+    includes: [ 'GModule-2.0', 'Gio-2.0', ],
+    header: 'gdk-pixbuf/gdk-pixbuf.h',
+    install: true,
+    extra_args: gir_args,
+  )
+
+  gdkpixdata_gir = gnome.generate_gir(
+    gdkpixbuf,
+    sources: gdkpixdata_sources + ['gdk-pixdata.h'],
+    namespace: 'GdkPixdata',
+    nsversion: gdk_pixbuf_api_version,
+    identifier_prefix: 'Gdk',
+    symbol_prefix: 'gdk',
+    export_packages: 'gdk-pixbuf-2.0',
+    includes: [ gdkpixbuf_gir[0] ],
+    header: 'gdk-pixbuf/gdk-pixdata.h',
+    install: true,
+    extra_args: gir_args,
+  )
+
+  built_girs = [ gdkpixbuf_gir, gdkpixdata_gir ]
+else
+  built_girs = []
+endif
+
+gdkpixbuf_dep = declare_dependency(
+  link_with: gdkpixbuf,
+  include_directories: root_inc,
+  dependencies: gdk_pixbuf_deps,
+  sources: [ gdkpixbuf_enum_h, built_girs ],
+)
 
 # Now check if we are building loaders as installed shared modules
 # We do this here because shared modules depend on libgdk-pixbuf
 dynamic_loaders = []
+dynamic_loaders_dep = []
 
 foreach l: loaders
   name = l[0]
   sources = l[1]
   cond = l.get(2, true)
   cflags = l.get(3, [])
+  name_suffix = []
+
+  # FIXME: workaround for https://gitlab.gnome.org/GNOME/glib/issues/1413
+  if host_system == 'darwin'
+    name_suffix = 'so'
+  endif
 
   if cond and not (builtin_loaders.contains(name) or builtin_all_loaders)
     mod = shared_module('pixbufloader-@0@'.format(name),
                         sources,
+                        gdkpixbuf_enum_h,
                         dependencies: loaders_deps + gdk_pixbuf_deps + [ gdkpixbuf_dep ],
                         include_directories: [ root_inc, gdk_pixbuf_inc ],
                         c_args: common_cflags + gdk_pixbuf_cflags + cflags,
+                        name_suffix: name_suffix,
                         install: true,
                         install_dir: gdk_pixbuf_loaderdir)
 
     # We need the path to build loaders.cache for tests
     dynamic_loaders += mod.full_path()
+    dynamic_loaders_dep += mod
   endif
 endforeach
 
@@ -200,12 +276,14 @@ if native_windows_loaders
 
       mod = shared_module('pixbufloader-gdip-@0@'.format(loader),
                           loader_sources,
+                          gdkpixbuf_enum_h,
                           dependencies: loaders_deps + gdk_pixbuf_deps + [ gdkpixbuf_dep ],
                           include_directories: [ root_inc, gdk_pixbuf_inc ],
                           c_args: common_cflags + gdk_pixbuf_cflags + cflags,
                           install: true,
                           install_dir: gdk_pixbuf_loaderdir)
       dynamic_loaders += mod.full_path()
+      dynamic_loaders_dep = mod
     endforeach
   endif
 endif
@@ -221,6 +299,7 @@ foreach bin: gdkpixbuf_bin
   bin_source = bin.get(1, bin_name + '.c')
 
   bin = executable(bin_name, bin_source,
+                   gdkpixbuf_enum_h,
                    dependencies: gdk_pixbuf_deps + [ gdkpixbuf_dep ],
                    include_directories: [ root_inc, gdk_pixbuf_inc ],
                    c_args: common_cflags + gdk_pixbuf_cflags,
@@ -230,39 +309,40 @@ foreach bin: gdkpixbuf_bin
   set_variable(bin_name.underscorify(), bin)
 endforeach
 
-# The 'loaders.cache' used for testing, so we don't accidentally
-# load the installed cache; we always build it by default
-loaders_cache = custom_target('loaders.cache',
-                              output: 'loaders.cache',
-                              capture: true,
-                              command: [
-                                gdk_pixbuf_query_loaders,
-                                dynamic_loaders,
-                              ],
-                              build_by_default: true)
-loaders_dep = declare_dependency(sources: [ loaders_cache ])
-
-build_gir = get_option('gir')
-if build_gir
-  gir_args = [
-    '--quiet',
-    '-DGDK_PIXBUF_COMPILATION',
-  ]
-
-  gdkpixbuf_gir = gnome.generate_gir(
-    gdkpixbuf,
-    sources: gdkpixbuf_sources + gdkpixbuf_headers + gdkpixbuf_enums + [
-      gdk_pixbuf_features_h,
-      'gdk-pixdata.h',
-    ],
-    namespace: 'GdkPixbuf',
-    nsversion: gdk_pixbuf_api_version,
-    identifier_prefix: 'Gdk',
-    symbol_prefix: 'gdk',
-    export_packages: 'gdk-pixbuf-2.0',
-    includes: [ 'GModule-2.0', 'Gio-2.0', ],
-    header: 'gdk-pixbuf/gdk-pixbuf.h',
-    install: true,
-    extra_args: gir_args,
-  )
+if not meson.is_cross_build()
+  # The 'loaders.cache' used for testing, so we don't accidentally
+  # load the installed cache; we always build it by default
+  loaders_cache = custom_target('loaders.cache',
+                                output: 'loaders.cache',
+                                capture: true,
+                                command: [
+                                  gdk_pixbuf_query_loaders,
+                                  dynamic_loaders,
+                                ],
+                                depends: dynamic_loaders_dep,
+                                build_by_default: true)
+  loaders_dep = declare_dependency(sources: [ loaders_cache ])
+else
+  loaders_cache = []
+  loaders_dep = declare_dependency()
 endif
+
+pkgconfig = import('pkgconfig')
+pkgconfig.generate(
+  gdkpixbuf,
+  name: 'GdkPixbuf',
+  description: 'Image loading and scaling',
+  variables: [
+    'bindir=${prefix}/@0@'.format(get_option('bindir')),
+    'gdk_pixbuf_binary_version=@0@'.format(gdk_pixbuf_binary_version),
+    'gdk_pixbuf_binarydir=${libdir}/@0@/@1@'.format(gdk_pixbuf_api_name, gdk_pixbuf_binary_version),
+    'gdk_pixbuf_moduledir=${gdk_pixbuf_binarydir}/loaders',
+    'gdk_pixbuf_cache_file=${gdk_pixbuf_binarydir}/loaders.cache',
+    'gdk_pixbuf_csource=${bindir}/gdk-pixbuf-csource',
+    'gdk_pixbuf_pixdata=${bindir}/gdk-pixbuf-pixdata',
+    'gdk_pixbuf_query_loaders=${bindir}/gdk-pixbuf-query-loaders',
+  ],
+  requires: 'gobject-2.0',
+  subdirs: gdk_pixbuf_api_name,
+  filebase: gdk_pixbuf_api_name,
+)
