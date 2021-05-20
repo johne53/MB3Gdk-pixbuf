@@ -82,7 +82,7 @@
       <AdditionalOptions>/FI$(TargetSxsFolder)\targetsxs.h %(AdditionalOptions)</AdditionalOptions>
       <Optimization>Disabled</Optimization>
       <AdditionalIncludeDirectories>.;$(GenericIncludeFolder);$(GenericIncludeFolder)\cairo;$(GenericIncludeFolder)\pango-1.0;$(GenericIncludeFolder)\atk-1.0;$(GenericLibraryFolder)\glib-2.0\include;..;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
-      <PreprocessorDefinitions>GTK_HOST="win64";GTK_PREFIX="Not set (placeholder)";GTK_LIBDIR="Not set (placeholder)";GTK_PRINT_BACKENDS="file,lpr";GTK_PRINT_PREVIEW_COMMAND="evince --unlink-tempfile --preview %f";WIN32;_WIN64;DEBUG;_DEBUG;_LIB;_CRT_SECURE_NO_WARNINGS;_WINDOWS;G_OS_WIN32;HAVE_CONFIG_H;HAVE_ROUND;ENABLE_NLS=1;GDK_PIXBUF_ENABLE_BACKEND;GTK_PRINT_BACKEND_ENABLE_UNSUPPORTED;G_LOG_DOMAIN="Gdk";GDK_COMPILATION;INCLUDE_bmp;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <PreprocessorDefinitions>GTK_HOST="win64";GTK_PREFIX="Not set (placeholder)";GTK_LIBDIR="Not set (placeholder)";GTK_PRINT_BACKENDS="file,lpr";GTK_PRINT_PREVIEW_COMMAND="evince --unlink-tempfile --preview %f";WIN32;_WIN64;DEBUG;_DEBUG;_LIB;_CRT_SECURE_NO_WARNINGS;_WINDOWS;G_OS_WIN32;HAVE_CONFIG_H;ENABLE_NLS=1;GDK_PIXBUF_ENABLE_BACKEND;GTK_PRINT_BACKEND_ENABLE_UNSUPPORTED;G_LOG_DOMAIN="Gdk";GDK_COMPILATION;INCLUDE_bmp;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <MinimalRebuild>true</MinimalRebuild>
       <BasicRuntimeChecks>EnableFastChecks</BasicRuntimeChecks>
       <RuntimeLibrary>MultiThreadedDebugDLL</RuntimeLibrary>
@@ -113,7 +113,7 @@
       <Optimization>MaxSpeed</Optimization>
       <InlineFunctionExpansion>OnlyExplicitInline</InlineFunctionExpansion>
       <AdditionalIncludeDirectories>.;$(GenericIncludeFolder);$(GenericIncludeFolder)\cairo;$(GenericIncludeFolder)\pango-1.0;$(GenericIncludeFolder)\atk-1.0;$(GenericLibraryFolder)\glib-2.0\include;..;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
-      <PreprocessorDefinitions>_SECURE_SCL=0;GTK_HOST="win64";GTK_PREFIX="Not set (placeholder)";GTK_LIBDIR="Not set (placeholder)";GTK_PRINT_BACKENDS="file,lpr";GTK_PRINT_PREVIEW_COMMAND="evince --unlink-tempfile --preview %f";WIN32;_WIN64;NDEBUG;_LIB;_CRT_SECURE_NO_WARNINGS;_WINDOWS;G_OS_WIN32;HAVE_CONFIG_H;HAVE_ROUND;ENABLE_NLS=1;GDK_PIXBUF_ENABLE_BACKEND;GTK_PRINT_BACKEND_ENABLE_UNSUPPORTED;G_LOG_DOMAIN="Gdk";GDK_COMPILATION;INCLUDE_bmp;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <PreprocessorDefinitions>_SECURE_SCL=0;GTK_HOST="win64";GTK_PREFIX="Not set (placeholder)";GTK_LIBDIR="Not set (placeholder)";GTK_PRINT_BACKENDS="file,lpr";GTK_PRINT_PREVIEW_COMMAND="evince --unlink-tempfile --preview %f";WIN32;_WIN64;NDEBUG;_LIB;_CRT_SECURE_NO_WARNINGS;_WINDOWS;G_OS_WIN32;HAVE_CONFIG_H;ENABLE_NLS=1;GDK_PIXBUF_ENABLE_BACKEND;GTK_PRINT_BACKEND_ENABLE_UNSUPPORTED;G_LOG_DOMAIN="Gdk";GDK_COMPILATION;INCLUDE_bmp;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <StringPooling>false</StringPooling>
       <RuntimeLibrary>MultiThreadedDLL</RuntimeLibrary>
       <RuntimeTypeInfo>false</RuntimeTypeInfo>
@@ -140,7 +140,7 @@
       <AdditionalOptions>/FI$(TargetSxsFolder)\targetsxs.h %(AdditionalOptions)</AdditionalOptions>
       <Optimization>Disabled</Optimization>
       <AdditionalIncludeDirectories>.;$(GenericIncludeFolder);$(GenericIncludeFolder)\cairo;$(GenericIncludeFolder)\pango-1.0;$(GenericIncludeFolder)\atk-1.0;$(GenericLibraryFolder)\glib-2.0\include;..;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
-      <PreprocessorDefinitions>_SECURE_SCL=0;GTK_HOST="win64";GTK_PREFIX="Not set (placeholder)";GTK_LIBDIR="Not set (placeholder)";GTK_PRINT_BACKENDS="file,lpr";GTK_PRINT_PREVIEW_COMMAND="evince --unlink-tempfile --preview %f";WIN32;_WIN64;NDEBUG;_LIB;_CRT_SECURE_NO_WARNINGS;_WINDOWS;G_OS_WIN32;HAVE_CONFIG_H;HAVE_ROUND;ENABLE_NLS=1;GDK_PIXBUF_ENABLE_BACKEND;GTK_PRINT_BACKEND_ENABLE_UNSUPPORTED;G_LOG_DOMAIN="Gdk";GDK_COMPILATION;INCLUDE_bmp;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <PreprocessorDefinitions>_SECURE_SCL=0;GTK_HOST="win64";GTK_PREFIX="Not set (placeholder)";GTK_LIBDIR="Not set (placeholder)";GTK_PRINT_BACKENDS="file,lpr";GTK_PRINT_PREVIEW_COMMAND="evince --unlink-tempfile --preview %f";WIN32;_WIN64;NDEBUG;_LIB;_CRT_SECURE_NO_WARNINGS;_WINDOWS;G_OS_WIN32;HAVE_CONFIG_H;ENABLE_NLS=1;GDK_PIXBUF_ENABLE_BACKEND;GTK_PRINT_BACKEND_ENABLE_UNSUPPORTED;G_LOG_DOMAIN="Gdk";GDK_COMPILATION;INCLUDE_bmp;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <StringPooling>false</StringPooling>
       <RuntimeLibrary>MultiThreadedDLL</RuntimeLibrary>
       <RuntimeTypeInfo>false</RuntimeTypeInfo>
