@@ -354,6 +354,10 @@
 				RelativePath="$(GdkPixbufBuildRootFolder)\gdk-pixbuf\gdk-pixdata.c"
 				>
 			</File>
+			<File
+				RelativePath="..\gdk-pixbuf\lzw.c"
+				>
+			</File>
 			<Filter
 				Name="pixops"
 				Filter="cpp;c;cxx;rc;def;r;odl;idl;hpj;bat;for;f90"
@@ -368,6 +372,10 @@
 			Name="Header Files"
 			Filter="h;hpp;hxx;hm;inl;fi;fd"
 			>
+			<File
+				RelativePath="..\gdk-pixbuf\gdk-pixbuf-macros.h"
+				>
+			</File>
 			<File
 				RelativePath="$(GdkPixbufBuildRootFolder)\gdk-pixbuf\gdk-pixbuf-marshal.h"
 				>

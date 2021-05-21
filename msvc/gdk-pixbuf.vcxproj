@@ -248,12 +248,14 @@ copy /Y "..\gdk-pixbuf-2.0.pc" "$(GenericLibraryFolder)\pkgconfig"
     <ClCompile Include="..\gdk-pixbuf\gdk-pixbuf.c" />
     <ClCompile Include="..\gdk-pixbuf\gdk-pixdata.c" />
     <ClCompile Include="..\gdk-pixbuf\io-gif-animation.c" />
+    <ClCompile Include="..\gdk-pixbuf\lzw.c" />
     <ClCompile Include="..\gdk-pixbuf\pixops\pixops.c" />
   </ItemGroup>
   <ItemGroup>
     <ResourceCompile Include="..\gdk-pixbuf\gdk_pixbuf.rc" />
   </ItemGroup>
   <ItemGroup>
+    <ClInclude Include="..\gdk-pixbuf\gdk-pixbuf-macros.h" />
     <ClInclude Include="..\gdk-pixbuf\gdk-pixbuf-marshal.h" />
     <ClInclude Include="..\gdk-pixbuf\gdk-pixbuf-private.h" />
     <ClInclude Include="..\gdk-pixbuf\gdk-pixbuf-scaled-anim.h" />

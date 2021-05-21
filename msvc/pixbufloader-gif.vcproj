@@ -300,6 +300,10 @@
 				RelativePath="..\gdk-pixbuf\io-gif.c"
 				>
 			</File>
+			<File
+				RelativePath="..\gdk-pixbuf\lzw.c"
+				>
+			</File>
 		</Filter>
 		<Filter
 			Name="Header Files"
