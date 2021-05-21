@@ -1,14 +1,14 @@
 #! e:/program files/perl/bin/perl.exe
-#  version info can be found in 'configure.ac'
+#  version info can be found in 'NEWS'
 
 require "../local-paths.lib";
 
-$gdk_pixbuf_version = "2.36.12";
+$gdk_pixbuf_version = "2.40.00";
 $major = 2;
-$minor = 36;
-$micro = 12;
-$interface_age = 12;
-$binary_age = 3612;
+$minor = 40;
+$micro = 0;
+$interface_age = 1;
+$binary_age = 4000;
 $current_minus_age = 0;
 $gettext_package = "gdk-pixbuf20";
 $gdk_pixbuf_loaders_version = "v2.32"; # Used to locate the file, 'loaders.cache'. Change this only when absolutely necessary !
@@ -75,9 +75,6 @@ if (-1 != index($command, "-linux")) {
 } else {
 	$library_ext = ".lib";
 }
-
-process_file ("config.h.win32");
-process_file ("gdk-pixbuf-2.0.pc");
 
 if ($command eq -buildall) {
 process_file ("gdk-pixbuf/gdk-pixbuf-features.h");
